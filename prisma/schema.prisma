@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -17,40 +16,39 @@ datasource db {
 enum Role {
   USER
   ADMIN
-  PARTNER
+  CLIENT
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  entityId  String?   @unique
-  email     String   @unique
-  password  String
-  businessName String?
-  businessAddress String?
-  rcNumber String?
-  role      Role     @default(USER)
+  id                  Int       @id @default(autoincrement())
+  entityId            String?   @unique
+  email               String    @unique
+  password            String
+  businessName        String?
+  businessAddress     String?
+  rcNumber            String?
+  role                Role      @default(USER)
   dateOfIncorporation DateTime? @default(now())
 
-    // Email verification fields
-  isEmailVerified    Boolean  @default(false)
-  emailVerificationToken String?
+  // Email verification fields
+  isEmailVerified          Boolean   @default(false)
+  emailVerificationToken   String?
   emailVerificationExpires DateTime?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isProfileComplete        Boolean   @default(false)
+  isActive                 Boolean   @default(true)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   // Relations
-  invoices  Invoice[]
-  directors Director[]
-  entity    Entity?
-  partnerApiLog  PartnerApiLog[]
-  PartnerApiCredential  PartnerApiCredential?
+  invoices                     Invoice[]
+  directors                    Director[]
+  entity                       Entity?
+  clientApiLog                 ClientApiLog[]
+  clientApiCredential          ClientApiCredential?
   systemIntegratorFirsSettings SystemIntegratorFirsSettings?
 
   @@map("users")
 }
-
-
 
 model Director {
   id          Int      @id @default(autoincrement())
@@ -64,53 +62,54 @@ model Director {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("directors")
 }
 
 model Invoice {
-  id                        Int      @id @default(autoincrement())
-  businessId                String
-  userId                    Int
-  irn                       String   @unique
-  issueDate                 DateTime
-  dueDate                   DateTime?
-  issueTime                 String?
-  invoiceTypeCode           String
-  paymentStatus             String   @default("PENDING")
-  note                      String?
-  taxPointDate              DateTime?
-  documentCurrencyCode      String
-  taxCurrencyCode           String?
-  accountingCost            String?
-  buyerReference            String?
-  orderReference            String?
-  actualDeliveryDate        DateTime?
-  paymentTermsNote          String?
-  status                    String   @default("PENDING")
-  transmittedAt             DateTime?
-  acknowledgedAt            DateTime?
-  failedAt                  DateTime?
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
+  id                   Int       @id @default(autoincrement())
+  businessId           String
+  userId               Int
+  irn                  String    @unique
+  issueDate            DateTime
+  dueDate              DateTime?
+  issueTime            String?
+  invoiceTypeCode      String
+  invoiceKind          String    @default("B2B")
+  paymentStatus        String    @default("PENDING")
+  note                 String?
+  taxPointDate         DateTime?
+  documentCurrencyCode String
+  taxCurrencyCode      String?
+  accountingCost       String?
+  buyerReference       String?
+  orderReference       String?
+  actualDeliveryDate   DateTime?
+  paymentTermsNote     String?
+  status               String    @default("PENDING")
+  transmittedAt        DateTime?
+  acknowledgedAt       DateTime?
+  failedAt             DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   // Relations
-  user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invoiceDeliveryPeriod     InvoiceDeliveryPeriod?
-  accountingSupplierParty   AccountingSupplierParty?
-  accountingCustomerParty   AccountingCustomerParty?
-  billingReferences         BillingReference[]
-  documentReferences        DocumentReference[]
-  dispatchDocumentReference DispatchDocumentReference?
-  receiptDocumentReference  ReceiptDocumentReference?
+  user                        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceDeliveryPeriod       InvoiceDeliveryPeriod?
+  accountingSupplierParty     AccountingSupplierParty?
+  accountingCustomerParty     AccountingCustomerParty?
+  billingReferences           BillingReference[]
+  documentReferences          DocumentReference[]
+  dispatchDocumentReference   DispatchDocumentReference?
+  receiptDocumentReference    ReceiptDocumentReference?
   originatorDocumentReference OriginatorDocumentReference?
-  contractDocumentReference ContractDocumentReference?
-  paymentMeans              PaymentMeans[]
-  allowanceCharges          AllowanceCharge[]
-  taxTotals                 TaxTotal[]
-  legalMonetaryTotal        LegalMonetaryTotal?
-  invoiceLines              InvoiceLine[]
+  contractDocumentReference   ContractDocumentReference?
+  paymentMeans                PaymentMeans[]
+  allowanceCharges            AllowanceCharge[]
+  taxTotals                   TaxTotal[]
+  legalMonetaryTotal          LegalMonetaryTotal?
+  invoiceLines                InvoiceLine[]
 
   @@map("invoices")
 }
@@ -126,43 +125,45 @@ model InvoiceDeliveryPeriod {
 }
 
 model AccountingSupplierParty {
-  id                  Int      @id @default(autoincrement())
-  invoiceId           Int      @unique
+  id                  Int            @id @default(autoincrement())
+  invoiceId           Int            @unique
   partyName           String
   tin                 String
   email               String
   telephone           String?
   businessDescription String?
-  invoice             Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice             Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   postalAddress       PostalAddress? @relation("SupplierPostalAddress")
 
   @@map("accounting_supplier_parties")
 }
 
 model AccountingCustomerParty {
-  id                  Int      @id @default(autoincrement())
-  invoiceId           Int      @unique
+  id                  Int            @id @default(autoincrement())
+  invoiceId           Int            @unique
   partyName           String
   tin                 String
   email               String
   telephone           String?
   businessDescription String?
-  invoice             Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice             Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   postalAddress       PostalAddress? @relation("CustomerPostalAddress")
 
   @@map("accounting_customer_parties")
 }
 
 model PostalAddress {
-  id        Int      @id @default(autoincrement())
-  streetName String
-  cityName   String
-  postalZone String
-  country    String
-  supplierPartyId Int? @unique
-  customerPartyId  Int? @unique
-  supplierParty AccountingSupplierParty? @relation("SupplierPostalAddress", fields: [supplierPartyId], references: [id])
-  customerParty  AccountingCustomerParty? @relation("CustomerPostalAddress", fields: [customerPartyId], references: [id])
+  id              Int                      @id @default(autoincrement())
+  streetName      String
+  cityName        String
+  postalZone      String
+  country         String
+  lga             String                   @default("")
+  state           String                   @default("")
+  supplierPartyId Int?                     @unique
+  customerPartyId Int?                     @unique
+  supplierParty   AccountingSupplierParty? @relation("SupplierPostalAddress", fields: [supplierPartyId], references: [id])
+  customerParty   AccountingCustomerParty? @relation("CustomerPostalAddress", fields: [customerPartyId], references: [id])
 
   @@map("postal_addresses")
 }
@@ -228,11 +229,11 @@ model ContractDocumentReference {
 }
 
 model PaymentMeans {
-  id                Int      @id @default(autoincrement())
-  invoiceId         Int
-  paymentMeansCode  String
-  paymentDueDate    DateTime
-  invoice           Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  id               Int      @id @default(autoincrement())
+  invoiceId        Int
+  paymentMeansCode String
+  paymentDueDate   DateTime
+  invoice          Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@map("payment_means")
 }
@@ -248,62 +249,62 @@ model AllowanceCharge {
 }
 
 model TaxTotal {
-  id        Int      @id @default(autoincrement())
-  invoiceId Int
-  taxAmount Float
-  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  id           Int           @id @default(autoincrement())
+  invoiceId    Int
+  taxAmount    Float
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   taxSubtotals TaxSubtotal[]
 
   @@map("tax_totals")
 }
 
 model TaxSubtotal {
-  id           Int      @id @default(autoincrement())
-  taxTotalId   Int
+  id            Int          @id @default(autoincrement())
+  taxTotalId    Int
   taxableAmount Float
-  taxAmount    Float
-  taxTotal     TaxTotal @relation(fields: [taxTotalId], references: [id], onDelete: Cascade)
-  taxCategory  TaxCategory?
+  taxAmount     Float
+  taxTotal      TaxTotal     @relation(fields: [taxTotalId], references: [id], onDelete: Cascade)
+  taxCategory   TaxCategory?
 
   @@map("tax_subtotals")
 }
 
 model TaxCategory {
-  id           Int     @id @default(autoincrement())
-  taxSubtotalId Int    @unique
-  categoryId   String
-  percent      Float
-  taxSubtotal  TaxSubtotal @relation(fields: [taxSubtotalId], references: [id], onDelete: Cascade)
+  id            Int         @id @default(autoincrement())
+  taxSubtotalId Int         @unique
+  categoryId    String
+  percent       Float
+  taxSubtotal   TaxSubtotal @relation(fields: [taxSubtotalId], references: [id], onDelete: Cascade)
 
   @@map("tax_categories")
 }
 
 model LegalMonetaryTotal {
-  id                    Int     @id @default(autoincrement())
-  invoiceId             Int     @unique
-  lineExtensionAmount   Float
-  taxExclusiveAmount    Float
-  taxInclusiveAmount    Float
-  payableAmount         Float
-  invoice               Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  id                  Int     @id @default(autoincrement())
+  invoiceId           Int     @unique
+  lineExtensionAmount Float
+  taxExclusiveAmount  Float
+  taxInclusiveAmount  Float
+  payableAmount       Float
+  invoice             Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@map("legal_monetary_totals")
 }
 
 model InvoiceLine {
-  id                    Int     @id @default(autoincrement())
-  invoiceId             Int
-  hsnCode               String
-  productCategory       String
-  discountRate          Float
-  discountAmount        Float
-  feeRate               Float
-  feeAmount             Float
-  invoicedQuantity      Float
-  lineExtensionAmount   Float
-  invoice               Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  item                  Item?
-  price                 Price?
+  id                  Int     @id @default(autoincrement())
+  invoiceId           Int
+  hsnCode             String
+  productCategory     String
+  discountRate        Float
+  discountAmount      Float
+  feeRate             Float
+  feeAmount           Float
+  invoicedQuantity    Float
+  lineExtensionAmount Float
+  invoice             Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  item                Item?
+  price               Price?
 
   @@map("invoice_lines")
 }
@@ -320,68 +321,76 @@ model Item {
 }
 
 model Price {
-  id              Int         @id @default(autoincrement())
-  invoiceLineId   Int         @unique
-  priceAmount     Float
-  baseQuantity    Float
-  priceUnit       String
-  invoiceLine     InvoiceLine @relation(fields: [invoiceLineId], references: [id], onDelete: Cascade)
+  id            Int         @id @default(autoincrement())
+  invoiceLineId Int         @unique
+  priceAmount   Float
+  baseQuantity  Float
+  priceUnit     String
+  invoiceLine   InvoiceLine @relation(fields: [invoiceLineId], references: [id], onDelete: Cascade)
 
   @@map("prices")
 }
 
 model WebhookEvent {
-  id           Int       @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   irn          String
   status       String
-  receivedAt   DateTime  @default(now())
-  processed    Boolean   @default(false)
+  receivedAt   DateTime @default(now())
+  processed    Boolean  @default(false)
   errorMessage String?
-  retryCount   Int       @default(0)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  retryCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("webhook_events")
 }
 
 model Entity {
-  id                String   @id @default(uuid())
-  reference         String
-  customSettings    String?  @map("custom_settings")
-  isActive          Boolean  @default(true) @map("is_active")
-  appReference      String   @map("app_reference")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-  userId            Int      @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  businesses        Business[]
+  id             String     @id @default(uuid())
+  reference      String
+  customSettings String?    @map("custom_settings")
+  isActive       Boolean    @default(true) @map("is_active")
+  appReference   String     @map("app_reference")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  userId         Int        @unique
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businesses     Business[]
 
   @@map("entities")
 }
 
 model Business {
-  id                    String   @id @default(uuid())
-  reference             String
-  name                  String
-  customSettings        String?  @map("custom_settings")
-  tin                   String
-  sector                String
-  annualTurnover        String   @map("annual_turnover")
-  supportPeppol         Boolean  @default(false) @map("support_peppol")
-  isRealtimeReporting   Boolean  @default(false) @map("is_realtime_reporting")
-  notificationChannels  String   @map("notification_channels")
-  erpSystem             String   @map("erp_system")
-  irnTemplate           String   @map("irn_template")
-  isActive              Boolean  @default(true) @map("is_active")
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
-  entityId              String
-  entity                Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  id                   String   @id @default(uuid())
+  reference            String
+  name                 String
+  customSettings       String?  @map("custom_settings")
+  tin                  String
+  sector               String
+  annualTurnover       String   @map("annual_turnover")
+  supportPeppol        Boolean  @default(false) @map("support_peppol")
+  isRealtimeReporting  Boolean  @default(false) @map("is_realtime_reporting")
+  notificationChannels String   @map("notification_channels")
+  erpSystem            String   @map("erp_system")
+  irnTemplate          String   @map("irn_template")
+  isActive             Boolean  @default(true) @map("is_active")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+  entityId             String
+  entity               Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  // Per-business FIRS API credentials (encrypted, from the business's FIRS Dashboard)
+  firsApiKey            String?  @map("firs_api_key")
+  firsApiSecret         String?  @map("firs_api_secret")
+
+  // Per-business cryptographic keys (from crypto_keys.txt)
+  firsPublicKeyBase64   String?  @map("firs_public_key_base64")
+  firsCertificateBase64 String?  @map("firs_certificate_base64")
 
   @@map("businesses")
 }
 
-model PartnerApiCredential {
+model ClientApiCredential {
   id        Int      @id @default(autoincrement())
   userId    Int      @unique
   apiKey    String
@@ -390,12 +399,12 @@ model PartnerApiCredential {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("partner_api_credentials")
+  @@map("client_api_credentials")
 }
 
-model PartnerApiLog {
+model ClientApiLog {
   id             Int      @id @default(autoincrement())
   userId         Int
   method         String
@@ -405,9 +414,9 @@ model PartnerApiLog {
   responseBody   String?
   createdAt      DateTime @default(now())
 
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("partner_api_logs")
+  @@map("client_api_logs")
 }
 
 model ConfigurationInvoiceType {
@@ -464,10 +473,10 @@ model ConfigurationVatExemption {
 }
 
 model ConfigurationProductCode {
-  hscode     String   @id
+  hscode      String   @id
   description String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("configuration_product_codes")
 }
@@ -482,11 +491,11 @@ model ConfigurationServiceCode {
 }
 
 model ConfigurationLocalGovernment {
-  code        String   @id
-  name        String
-  state_code  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  code       String   @id
+  name       String
+  state_code String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@map("configuration_local_governments")
 }

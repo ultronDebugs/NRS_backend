@@ -1,24 +1,27 @@
-import { Controller, Get, ForbiddenException,UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { DashboardService } from './dashboard.service';
-import { CurrentUser } from '../../common/decorators';
-import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { Controller, Get, UseGuards } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { DashboardService } from "./dashboard.service";
+import { CurrentUser } from "../../common/decorators";
+import { JwtAuthGuard } from "../auth/guard/jwt-auth.guard";
 
-@ApiTags('Dashboard')
-@Controller('api/v1/dashboard')
+@ApiTags("Dashboard")
+@Controller("api/v1/dashboard")
 @UseGuards(JwtAuthGuard)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  @Get('summary')
-  @ApiOperation({ summary: 'Get dashboard summary based on user role' })
-  @ApiResponse({ status: 200, description: 'Dashboard summary retrieved successfully' })
+  @Get("summary")
+  @ApiOperation({ summary: "Get dashboard summary based on user role" })
+  @ApiResponse({
+    status: 200,
+    description: "Dashboard summary retrieved successfully",
+  })
   async getSummary(@CurrentUser() user: any) {
-    const userRole = (user as any).role;
-    
-    if (userRole === 'PARTNER') {
-      return this.dashboardService.getPartnerDashboardSummary(user.id);
-    } else if (userRole === 'ADMIN') {
+    const userRole = user.role;
+
+    if (userRole === "CLIENT") {
+      return this.dashboardService.getClientDashboardSummary(user.id);
+    } else if (userRole === "ADMIN") {
       return this.dashboardService.getAdminDashboardSummary();
     } else {
       // Regular user - get invoice dashboard
@@ -26,15 +29,15 @@ export class DashboardController {
     }
   }
 
-  // @Get('partner')
-  // @ApiOperation({ summary: 'Get partner-specific dashboard' })
-  // @ApiResponse({ status: 200, description: 'Partner dashboard retrieved successfully' })
-  // async getPartnerDashboard(@CurrentUser() user: any) {
+  // @Get('client')
+  // @ApiOperation({ summary: 'Get client-specific dashboard' })
+  // @ApiResponse({ status: 200, description: 'Client dashboard retrieved successfully' })
+  // async getClientDashboard(@CurrentUser() user: any) {
   //   const userRole = (user as any).role;
-  //   if (userRole !== 'PARTNER') {
-  //     throw new ForbiddenException('Only partners can access this endpoint');
+  //   if (userRole !== 'CLIENT') {
+  //     throw new ForbiddenException('Only clients can access this endpoint');
   //   }
-  //   return this.dashboardService.getPartnerDashboardSummary(user.id);
+  //   return this.dashboardService.getClientDashboardSummary(user.id);
   // }
 
   // @Get('admin')
@@ -48,5 +51,3 @@ export class DashboardController {
   //   return this.dashboardService.getAdminDashboardSummary();
   // }
 }
-
-

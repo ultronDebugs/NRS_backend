@@ -14,8 +14,10 @@ import {
   MaxLength,
   ValidateNested,
   ValidateIf,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+  IsEnum,
+  MinLength,
+} from "class-validator";
+import { Type } from "class-transformer";
 
 /**
  * Address details for a party.
@@ -37,6 +39,14 @@ class PostalAddressDto {
   @IsNotEmpty()
   @Length(2, 2)
   readonly country: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly lga: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly state: string;
 }
 
 /**
@@ -49,6 +59,7 @@ class PartyDto {
 
   @IsString()
   @IsNotEmpty()
+  @Matches(/^[\d-]+$/, { message: 'TIN must contain only numbers and optional hyphens' })
   readonly tin: string;
 
   @IsEmail()
@@ -58,7 +69,7 @@ class PartyDto {
   @IsOptional()
   @IsString()
   @Matches(/^\+\d+$/, {
-    message: 'telephone must start with + and contain only digits',
+    message: "telephone must start with + and contain only digits",
   })
   readonly telephone?: string;
 
@@ -219,6 +230,8 @@ class InvoiceLinePriceDto {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(1)
+  @MaxLength(5)
   readonly price_unit: string;
 }
 
@@ -228,6 +241,7 @@ class InvoiceLinePriceDto {
 class InvoiceLineDto {
   @IsString()
   @IsNotEmpty()
+  @Matches(/^\d{4,10}$/, { message: 'HSN code must be a numeric string between 4 and 10 digits' })
   readonly hsn_code: string;
 
   @IsString()
@@ -270,7 +284,12 @@ class InvoiceLineDto {
 /**
  * Data Transfer Object for validating an invoice.
  */
-export class ValidateInvoiceDto {
+export class FirsValidateInvoiceDto {
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(['B2B', 'B2C', 'B2G'])
+  readonly invoice_kind: string;
+
   @IsString()
   @IsNotEmpty()
   readonly business_id: string;
@@ -290,7 +309,7 @@ export class ValidateInvoiceDto {
   @IsOptional()
   @IsString()
   @Matches(/^\d{2}:\d{2}:\d{2}$/, {
-    message: 'issue_time must be in HH:mm:ss format',
+    message: "issue_time must be in HH:mm:ss format",
   })
   readonly issue_time?: string;
 
@@ -300,7 +319,7 @@ export class ValidateInvoiceDto {
 
   @IsOptional()
   @IsString()
-  readonly payment_status?: string = 'PENDING';
+  readonly payment_status?: string = "PENDING";
 
   @IsOptional()
   @IsString()

@@ -8,58 +8,50 @@ import {
   Param,
   ParseIntPipe,
   NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CreateUserDto, UpdateUserDto } from './dtos';
-import { CurrentUser, Roles } from 'src/common/decorators';
+  UseGuards,
+} from "@nestjs/common";
+import { UsersService } from "./users.service";
+import { CreateUserDto, UpdateUserDto } from "./dtos";
+import { JwtAuthGuard } from "../auth/guard/jwt-auth.guard";
+import { Roles } from "../../common/decorators";
+import { RolesGuard } from "../../common/guards/roles.guard";
 
-@Controller('api/v1/users')
+@Controller("api/v1/users")
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles("ADMIN")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @Roles('ADMIN')
   async findAll() {
     return this.usersService.findAllUsers();
   }
 
-  @Get(':id')
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() requester: any,
-  ) {
-    if (requester.role !== 'ADMIN' && requester.id !== id) {
-      throw new ForbiddenException('You can only access your own profile');
-    }
+  @Get(":id")
+  async findOne(@Param("id", ParseIntPipe) id: number) {
     const user = await this.usersService.findUserById(id);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     return user;
   }
 
   @Post()
-  @Roles('ADMIN')
   async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto);
   }
 
-  @Put(':id')
-  @Roles('ADMIN')
+  @Put(":id")
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.updateUser(id, updateUserDto);
   }
 
-  @Delete(':id')
-  async remove(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() requester: any,
-  ) {
-    await this.usersService.removeAsRequester(id, requester.id, requester.role);
-    return { message: 'User successfully deactivated' };
+  @Delete(":id")
+  async remove(@Param("id", ParseIntPipe) id: number) {
+    await this.usersService.remove(id);
+    return { message: "User successfully deactivated" };
   }
 }

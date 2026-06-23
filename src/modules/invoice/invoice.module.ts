@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { InvoiceService } from './invoice.service';
-import { InvoiceController } from './invoice.controller';
-import { DatabaseModule } from 'src/database';
+import { Module } from "@nestjs/common";
+import { InvoiceService } from "./invoice.service";
+import { InvoiceController } from "./invoice.controller";
+import { DatabaseModule } from "../../database";
 
 @Module({
   imports: [DatabaseModule],
@@ -9,4 +9,4 @@ import { DatabaseModule } from 'src/database';
   exports: [InvoiceService],
   providers: [InvoiceService],
 })
-export class InvoiceModule {} 
+export class InvoiceModule {}

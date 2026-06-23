@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { FirsService } from './firs.service';
-import { FirsController } from './firs.controller';
-import { DatabaseModule } from 'src/database';
+import { Module } from "@nestjs/common";
+import { FirsService } from "./firs.service";
+import { FirsController } from "./firs.controller";
+import { DatabaseModule } from "../../database";
 
 @Module({
   imports: [DatabaseModule],

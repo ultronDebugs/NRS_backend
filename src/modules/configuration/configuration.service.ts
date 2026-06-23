@@ -1,7 +1,7 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from 'src/database';
-import axios, { AxiosResponse } from 'axios';
+import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "../../database";
+import axios, { AxiosResponse } from "axios";
 
 export interface InvoiceType {
   code: string;
@@ -67,11 +67,13 @@ export class ConfigurationService {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    const firsApiUrl = this.configService.get<string>('FIRS_API_URL');
-    const firsApiKey = this.configService.get<string>('FIRS_API_KEY');
-    const firsApiSecret = this.configService.get<string>('FIRS_API_SECRET');
+    const firsApiUrl = this.configService.get<string>("FIRS_API_URL");
+    const firsApiKey = this.configService.get<string>("FIRS_API_KEY");
+    const firsApiSecret = this.configService.get<string>("FIRS_API_SECRET");
     if (!firsApiUrl || !firsApiKey || !firsApiSecret) {
-      throw new Error('FIRS API credentials are not set in environment variables');
+      throw new Error(
+        "FIRS API credentials are not set in environment variables",
+      );
     }
     this.firsApiUrl = firsApiUrl;
     this.firsApiKey = firsApiKey;
@@ -81,25 +83,28 @@ export class ConfigurationService {
   private async makeFirsApiRequest<T>(endpoint: string): Promise<T> {
     try {
       console.log(`${this.firsApiUrl}/api/v1/invoice/resources${endpoint}`);
-      const response: AxiosResponse<{ data: T }> = await axios.get(`${this.firsApiUrl}/api/v1/invoice/resources${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+      const response: AxiosResponse<{ data: T }> = await axios.get(
+        `${this.firsApiUrl}/api/v1/invoice/resources${endpoint}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": this.firsApiKey,
+            "x-api-secret": this.firsApiSecret,
+          },
         },
-      });
+      );
       // console.log(response);
-      return response.data.data as T;
+      return response.data.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         throw new HttpException(
           `Failed to fetch data from FIRS API: ${error.message}`,
-          error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR
+          error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
       throw new HttpException(
-        'Failed to fetch data from FIRS API',
-        HttpStatus.INTERNAL_SERVER_ERROR
+        "Failed to fetch data from FIRS API",
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -126,8 +131,8 @@ export class ConfigurationService {
 
   async getInvoiceTypes(): Promise<InvoiceType[]> {
     return this.getCachedOrFetch<InvoiceType, any>(
-      'configurationInvoiceType',
-      '/invoice-types',
+      "configurationInvoiceType",
+      "/invoice-types",
       (item) => ({
         value: item.value,
         code: item.code,
@@ -141,8 +146,8 @@ export class ConfigurationService {
 
   async getPaymentMeans(): Promise<PaymentMean[]> {
     return this.getCachedOrFetch<PaymentMean, any>(
-      'configurationPaymentMean',
-      '/payment-means',
+      "configurationPaymentMean",
+      "/payment-means",
       (item) => ({
         value: item.value,
         code: item.code,
@@ -156,8 +161,8 @@ export class ConfigurationService {
 
   async getTaxCategories(): Promise<TaxCategory[]> {
     return this.getCachedOrFetch<TaxCategory, any>(
-      'configurationTaxCategory',
-      '/tax-categories',
+      "configurationTaxCategory",
+      "/tax-categories",
       (item) => ({
         value: item.value,
         code: item.code,
@@ -171,8 +176,8 @@ export class ConfigurationService {
 
   async getCurrencies(): Promise<Currency[]> {
     return this.getCachedOrFetch<Currency, any>(
-      'configurationCurrency',
-      '/currencies',
+      "configurationCurrency",
+      "/currencies",
       (item) => ({
         code: item.code,
         name: item.name,
@@ -196,8 +201,8 @@ export class ConfigurationService {
 
   async getVatExemptions(): Promise<VatExemption[]> {
     return this.getCachedOrFetch<VatExemption, any>(
-      'configurationVatExemption',
-      '/vat-exemptions',
+      "configurationVatExemption",
+      "/vat-exemptions",
       (item) => ({
         harmonized_system_code: item.harmonized_system_code,
         heading_no: item.heading_no,
@@ -217,8 +222,8 @@ export class ConfigurationService {
 
   async getProductCodes(): Promise<ProductCode[]> {
     return this.getCachedOrFetch<ProductCode, any>(
-      'configurationProductCode',
-      '/hs-codes',
+      "configurationProductCode",
+      "/hs-codes",
       (item) => ({
         hscode: item.hscode,
         description: item.description,
@@ -232,8 +237,8 @@ export class ConfigurationService {
 
   async getServiceCodes(): Promise<ServiceCode[]> {
     return this.getCachedOrFetch<ServiceCode, any>(
-      'configurationServiceCode',
-      '/services-codes',
+      "configurationServiceCode",
+      "/services-codes",
       (item) => ({
         code: item.code,
         description: item.description,
@@ -247,8 +252,8 @@ export class ConfigurationService {
 
   async getLocalGovernments(): Promise<LocalGovernment[]> {
     return this.getCachedOrFetch<LocalGovernment, any>(
-      'configurationLocalGovernment',
-      '/lgas',
+      "configurationLocalGovernment",
+      "/lgas",
       (item) => ({
         code: item.code,
         name: item.name,
@@ -264,8 +269,8 @@ export class ConfigurationService {
 
   async getStateCodes(): Promise<State[]> {
     return this.getCachedOrFetch<State, any>(
-      'configurationState',
-      '/states',
+      "configurationState",
+      "/states",
       (item) => ({
         code: item.code,
         name: item.name,
@@ -276,4 +281,4 @@ export class ConfigurationService {
       }),
     );
   }
-} 
+}

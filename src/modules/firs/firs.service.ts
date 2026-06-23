@@ -1,29 +1,31 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/database';
-import axios from 'axios';
-import { CountryEntity } from './entities/countries.entities';
-import { LoginDto } from './dtos/firs-login.dto';
-import { FirsLoginResponseEntity } from './entities/firs-login.entity';
-import { SearchEntityDto } from './dtos/search-entity.dto';
-import { ValidateIrnDto } from './dtos/validate-irn.dto';
-import { ValidateInvoiceDto } from './dtos/validete-invoice.dto';
-import { ConfirmEntity } from './entities/confirm.entities';
-import { UpdateInvoicePaymentStatusDto } from './dtos/update-invoice.dto';
-import { WebhookPayloadDto, WebhookResponseDto } from './dtos/webhook.dto';
+import { HttpException, Injectable, Logger, InternalServerErrorException, BadGatewayException } from "@nestjs/common";
+import { PrismaService } from "../../database";
+import axios from "axios";
+import { CountryEntity } from "./entities/countries.entities";
+import { LoginDto } from "./dtos/firs-login.dto";
+import { FirsLoginResponseEntity } from "./entities/firs-login.entity";
+import { SearchEntityDto } from "./dtos/search-entity.dto";
+import { ValidateIrnDto } from "./dtos/validate-irn.dto";
+import { FirsValidateInvoiceDto } from "./dtos/validete-invoice.dto";
+import { ConfirmEntity } from "./entities/confirm.entities";
+import { UpdateInvoicePaymentStatusDto } from "./dtos/update-invoice.dto";
+import { WebhookPayloadDto, WebhookResponseDto } from "./dtos/webhook.dto";
 
 @Injectable()
 export class FirsService {
   private readonly logger = new Logger(FirsService.name);
 
   constructor(private readonly prisma: PrismaService) {}
-  private readonly firsApiUrl: string = process.env.FIRS_API_URL ?? '';
-  private readonly firsApiKey: string = process.env.FIRS_API_KEY ?? '';
-  private readonly firsApiSecret: string = process.env.FIRS_API_SECRET ?? '';
+  private readonly firsApiUrl: string = process.env.FIRS_API_URL ?? "";
+  private readonly firsApiKey: string = process.env.FIRS_API_KEY ?? "";
+  private readonly firsApiSecret: string = process.env.FIRS_API_SECRET ?? "";
+  private readonly siApiKey: string = process.env.SYSTEM_INTEGRATOR_API_KEY ?? "";
+  private readonly siApiSecret: string = process.env.SYSTEM_INTEGRATOR_API_SECRET ?? "";
 
   async loginTaxpayer(loginDto: LoginDto): Promise<FirsLoginResponseEntity> {
     if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -36,27 +38,25 @@ export class FirsService {
     try {
       const response = await axios.post(url, payload, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+          "Content-Type": "application/json",
+          "x-api-key": this.firsApiKey,
+          "x-api-secret": this.firsApiSecret,
         },
       });
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
-          `Failed to authenticate taxpayer: ${error.response.status} ${JSON.stringify(error.response.data)}`,
-        );
+        throw new HttpException(error.response.data, error.response.status);
       }
-      throw new Error(`Failed to authenticate taxpayer: ${error.message}`);
+      throw new BadGatewayException(`Failed to authenticate taxpayer: ${error.message}`);
     }
   }
 
   //#region Entity
   async getEntityById(entityId: string): Promise<any> {
-    if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+    if (!this.firsApiUrl || !this.siApiKey || !this.siApiSecret) {
+      throw new InternalServerErrorException(
+        "SI API credentials are not set in environment variables",
       );
     }
 
@@ -65,33 +65,31 @@ export class FirsService {
     try {
       const response = await axios.get(url, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+          "Content-Type": "application/json",
+          "x-api-key": this.siApiKey,
+          "x-api-secret": this.siApiSecret,
         },
       });
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
-          `Failed to fetch entity: ${error.response.status} ${error.response.data}`,
-        );
+        throw new HttpException(error.response.data, error.response.status);
       }
-      throw new Error(`Failed to fetch entity: ${error.message}`);
+      throw new BadGatewayException(`Failed to fetch entity: ${error.message}`);
     }
   }
 
   async searchEntitiesByReference(searchParams: SearchEntityDto): Promise<any> {
-    if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+    if (!this.firsApiUrl || !this.siApiKey || !this.siApiSecret) {
+      throw new InternalServerErrorException(
+        "SI API credentials are not set in environment variables",
       );
     }
 
     const {
       size = 20,
       page = 1,
-      sortBy = 'created_at',
+      sortBy = "created_at",
       sortDirectionDesc = true,
     } = searchParams ?? {};
 
@@ -107,20 +105,18 @@ export class FirsService {
     try {
       const response = await axios.get(url, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+          "Content-Type": "application/json",
+          "x-api-key": this.siApiKey,
+          "x-api-secret": this.siApiSecret,
         },
         params,
       });
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
-          `Failed to search entities: ${error.response.status} ${JSON.stringify(error.response.data)}`,
-        );
+        throw new HttpException(error.response.data, error.response.status);
       }
-      throw new Error(`Failed to search entities: ${error.message}`);
+      throw new BadGatewayException(`Failed to search entities: ${error.message}`);
     }
   }
   //#endregion
@@ -128,8 +124,8 @@ export class FirsService {
   //#region Resources
   async getCountries(): Promise<CountryEntity[]> {
     if (!this.firsApiUrl) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -140,18 +136,18 @@ export class FirsService {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to get countries: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to get countries: ${error.message}`);
+      throw new BadGatewayException(`Failed to get countries: ${error.message}`);
     }
   }
 
   async getCurrencies(): Promise<any> {
     if (!this.firsApiUrl) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -162,18 +158,18 @@ export class FirsService {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to get currencies: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to get currencies: ${error.message}`);
+      throw new BadGatewayException(`Failed to get currencies: ${error.message}`);
     }
   }
 
   async getTaxCategories(): Promise<any> {
     if (!this.firsApiUrl) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -184,18 +180,18 @@ export class FirsService {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to get tax categories: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to get tax categories: ${error.message}`);
+      throw new BadGatewayException(`Failed to get tax categories: ${error.message}`);
     }
   }
 
   async getPaymentMeans(): Promise<any> {
     if (!this.firsApiUrl) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -206,18 +202,18 @@ export class FirsService {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to get payment means: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to get payment means: ${error.message}`);
+      throw new BadGatewayException(`Failed to get payment means: ${error.message}`);
     }
   }
 
   async getInvoiceTypes(): Promise<any> {
     if (!this.firsApiUrl) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -228,18 +224,18 @@ export class FirsService {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to get invoice types: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to get invoice types: ${error.message}`);
+      throw new BadGatewayException(`Failed to get invoice types: ${error.message}`);
     }
   }
 
   async getServiceCodes(): Promise<any> {
     if (!this.firsApiUrl) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -250,18 +246,18 @@ export class FirsService {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to get service codes: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to get service codes: ${error.message}`);
+      throw new BadGatewayException(`Failed to get service codes: ${error.message}`);
     }
   }
 
   async getVatExemptions(): Promise<any> {
     if (!this.firsApiUrl) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -272,11 +268,11 @@ export class FirsService {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to get VAT exemptions: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to get VAT exemptions: ${error.message}`);
+      throw new BadGatewayException(`Failed to get VAT exemptions: ${error.message}`);
     }
   }
 
@@ -286,8 +282,8 @@ export class FirsService {
 
   async validateIrn(params: ValidateIrnDto): Promise<{ ok: boolean }> {
     if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -301,33 +297,35 @@ export class FirsService {
     try {
       const response = await axios.post(url, body, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+          "Content-Type": "application/json",
+          "x-api-key": this.firsApiKey,
+          "x-api-secret": this.firsApiSecret,
         },
       });
       if (
         response.data &&
         response.data.data &&
-        typeof response.data.data.ok === 'boolean'
+        typeof response.data.data.ok === "boolean"
       ) {
         return { ok: response.data.data.ok };
       }
-      throw new Error('Invalid response from FIRS API');
+      throw new BadGatewayException("Invalid response from FIRS API");
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to validate IRN: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to validate IRN: ${error.message}`);
+      throw new BadGatewayException(`Failed to validate IRN: ${error.message}`);
     }
   }
 
-  async validateInvoice(params: ValidateInvoiceDto): Promise<{ ok: boolean }> {
+  async validateInvoice(
+    params: FirsValidateInvoiceDto,
+  ): Promise<{ ok: boolean }> {
     if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -336,33 +334,33 @@ export class FirsService {
     try {
       const response = await axios.post(url, params, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+          "Content-Type": "application/json",
+          "x-api-key": this.firsApiKey,
+          "x-api-secret": this.firsApiSecret,
         },
       });
       if (
         response.data &&
         response.data.data &&
-        typeof response.data.data.ok === 'boolean'
+        typeof response.data.data.ok === "boolean"
       ) {
         return { ok: response.data.data.ok };
       }
-      throw new Error('Invalid response from FIRS API');
+      throw new BadGatewayException("Invalid response from FIRS API");
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to validate invoice: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to validate invoice: ${error.message}`);
+      throw new BadGatewayException(`Failed to validate invoice: ${error.message}`);
     }
   }
 
-  async signInvoice(params: ValidateInvoiceDto): Promise<{ ok: boolean }> {
+  async signInvoice(params: FirsValidateInvoiceDto): Promise<{ ok: boolean }> {
     if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -371,26 +369,26 @@ export class FirsService {
     try {
       const response = await axios.post(url, params, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+          "Content-Type": "application/json",
+          "x-api-key": this.firsApiKey,
+          "x-api-secret": this.firsApiSecret,
         },
       });
       if (
         response.data &&
         response.data.data &&
-        typeof response.data.data.ok === 'boolean'
+        typeof response.data.data.ok === "boolean"
       ) {
         return { ok: response.data.data.ok };
       }
-      throw new Error('Invalid response from FIRS API');
+      throw new BadGatewayException("Invalid response from FIRS API");
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to sign invoice: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to sign invoice: ${error.message}`);
+      throw new BadGatewayException(`Failed to sign invoice: ${error.message}`);
     }
   }
 
@@ -404,15 +402,15 @@ export class FirsService {
     decryptionKey: string;
   }): Promise<string> {
     if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
     if (!params.irn) {
-      throw new Error('IRN is required to download the invoice');
+      throw new BadGatewayException("IRN is required to download the invoice");
     }
     if (!params.decryptionKey) {
-      throw new Error('Decryption key is required to decrypt the invoice');
+      throw new BadGatewayException("Decryption key is required to decrypt the invoice");
     }
 
     const url = `${this.firsApiUrl}/api/v1/invoice/download/${params.irn}`;
@@ -420,44 +418,44 @@ export class FirsService {
     try {
       const response = await axios.get(url, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+          "Content-Type": "application/json",
+          "x-api-key": this.firsApiKey,
+          "x-api-secret": this.firsApiSecret,
         },
       });
 
       if (
         response.data &&
         response.data.data &&
-        typeof response.data.data.iv_hex === 'string' &&
-        typeof response.data.data.data === 'string'
+        typeof response.data.data.iv_hex === "string" &&
+        typeof response.data.data.data === "string"
       ) {
         const ivHex: string = response.data.data.iv_hex;
         const ciphertext: string = response.data.data.data;
-        const key: Buffer = Buffer.from(params.decryptionKey, 'base64');
+        const key: Buffer = Buffer.from(params.decryptionKey, "base64");
 
         let iv: Buffer;
         try {
-          iv = Buffer.from(ivHex, 'hex');
+          iv = Buffer.from(ivHex, "hex");
         } catch (err) {
-          throw new Error('Error decoding IV: ' + err.message);
+          throw new InternalServerErrorException("Error decoding IV: " + err.message);
         }
 
         try {
           const decrypted = this.decryptAes256Cfb(key, iv, ciphertext);
           return decrypted;
         } catch (err) {
-          throw new Error('Decryption error: ' + err.message);
+          throw new InternalServerErrorException("Decryption error: " + err.message);
         }
       }
-      throw new Error('Invalid response from FIRS API');
+      throw new BadGatewayException("Invalid response from FIRS API");
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to download invoice: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to download invoice: ${error.message}`);
+      throw new BadGatewayException(`Failed to download invoice: ${error.message}`);
     }
   }
 
@@ -474,16 +472,16 @@ export class FirsService {
     ciphertext: string,
   ): string {
     // Decode base64url-encoded ciphertext
-    const ciphertextBytes = Buffer.from(ciphertext, 'base64url');
+    const ciphertextBytes = Buffer.from(ciphertext, "base64url");
     // Create decipher instance for AES-256-CFB
-    const crypto = require('crypto');
-    const decipher = crypto.createDecipheriv('aes-256-cfb', key, iv);
+    const crypto = require("crypto");
+    const decipher = crypto.createDecipheriv("aes-256-cfb", key, iv);
     // Decrypt the data
     const decrypted = Buffer.concat([
       decipher.update(ciphertextBytes),
       decipher.final(),
     ]);
-    return decrypted.toString('utf8');
+    return decrypted.toString("utf8");
   }
 
   /**
@@ -493,8 +491,8 @@ export class FirsService {
    */
   async getInvoiceConfirmation(irn: string): Promise<ConfirmEntity> {
     if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
@@ -503,21 +501,21 @@ export class FirsService {
     try {
       const response = await axios.get(url, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+          "Content-Type": "application/json",
+          "x-api-key": this.firsApiKey,
+          "x-api-secret": this.firsApiSecret,
         },
       });
 
       if (
         response.data &&
         response.data.data &&
-        typeof response.data.data.issue_date === 'string' &&
-        typeof response.data.data.due_date === 'string' &&
-        typeof response.data.data.sync_date === 'string' &&
-        typeof response.data.data.payment_status === 'string' &&
-        typeof response.data.data.transmitted === 'boolean' &&
-        typeof response.data.data.delivered === 'boolean'
+        typeof response.data.data.issue_date === "string" &&
+        typeof response.data.data.due_date === "string" &&
+        typeof response.data.data.sync_date === "string" &&
+        typeof response.data.data.payment_status === "string" &&
+        typeof response.data.data.transmitted === "boolean" &&
+        typeof response.data.data.delivered === "boolean"
       ) {
         return {
           issueDate: response.data.data.issue_date,
@@ -528,14 +526,14 @@ export class FirsService {
           delivered: response.data.data.delivered,
         };
       }
-      throw new Error('Invalid response from FIRS API');
+      throw new BadGatewayException("Invalid response from FIRS API");
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to confirm invoice: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to confirm invoice: ${error.message}`);
+      throw new BadGatewayException(`Failed to confirm invoice: ${error.message}`);
     }
   }
 
@@ -548,14 +546,14 @@ export class FirsService {
     params: UpdateInvoicePaymentStatusDto,
   ): Promise<{ ok: boolean }> {
     if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
-      throw new Error(
-        'FIRS API credentials are not set in environment variables',
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
       );
     }
 
     const url = `${this.firsApiUrl}/api/v1/invoice/update/${params.irn}`;
     const body: {
-      payment_status: 'PENDING' | 'PAID' | 'REJECTED';
+      payment_status: "PENDING" | "PAID" | "REJECTED";
       reference?: string;
     } = {
       payment_status: params.paymentStatus,
@@ -568,9 +566,9 @@ export class FirsService {
     try {
       const response = await axios.patch(url, body, {
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.firsApiKey,
-          'x-api-secret': this.firsApiSecret,
+          "Content-Type": "application/json",
+          "x-api-key": this.firsApiKey,
+          "x-api-secret": this.firsApiSecret,
         },
       });
 
@@ -578,18 +576,18 @@ export class FirsService {
         response.data &&
         response.data.code === 200 &&
         response.data.data &&
-        typeof response.data.data.ok === 'boolean'
+        typeof response.data.data.ok === "boolean"
       ) {
         return { ok: response.data.data.ok };
       }
-      throw new Error('Invalid response from FIRS API');
+      throw new BadGatewayException("Invalid response from FIRS API");
     } catch (error) {
       if (error.response) {
-        throw new Error(
+        throw new BadGatewayException(
           `Failed to update invoice: ${error.response.status} ${JSON.stringify(error.response.data)}`,
         );
       }
-      throw new Error(`Failed to update invoice: ${error.message}`);
+      throw new BadGatewayException(`Failed to update invoice: ${error.message}`);
     }
   }
 
@@ -618,7 +616,7 @@ export class FirsService {
 
       const response: WebhookResponseDto = {
         success: true,
-        message: 'Webhook processed successfully',
+        message: "Webhook processed successfully",
         timestamp: new Date().toISOString(),
       };
 
@@ -695,16 +693,16 @@ export class FirsService {
     payload: WebhookPayloadDto,
   ): Promise<void> {
     switch (payload.message) {
-      case 'TRANSMITTING':
+      case "TRANSMITTING":
         await this.handleTransmittingStatus(payload.irn);
         break;
-      case 'TRANSMITTED':
+      case "TRANSMITTED":
         await this.handleTransmittedStatus(payload.irn);
         break;
-      case 'ACKNOWLEDGED':
+      case "ACKNOWLEDGED":
         await this.handleAcknowledgedStatus(payload.irn);
         break;
-      case 'FAILED':
+      case "FAILED":
         await this.handleFailedStatus(payload.irn);
         break;
       default:
@@ -726,7 +724,7 @@ export class FirsService {
       await this.prisma.invoice.updateMany({
         where: { irn },
         data: {
-          status: 'TRANSMITTING',
+          status: "TRANSMITTING",
           updatedAt: new Date(),
         },
       });
@@ -750,7 +748,7 @@ export class FirsService {
       await this.prisma.invoice.updateMany({
         where: { irn },
         data: {
-          status: 'TRANSMITTED',
+          status: "TRANSMITTED",
           transmittedAt: new Date(),
           updatedAt: new Date(),
         },
@@ -775,7 +773,7 @@ export class FirsService {
       await this.prisma.invoice.updateMany({
         where: { irn },
         data: {
-          status: 'ACKNOWLEDGED',
+          status: "ACKNOWLEDGED",
           acknowledgedAt: new Date(),
           updatedAt: new Date(),
         },
@@ -800,7 +798,7 @@ export class FirsService {
       await this.prisma.invoice.updateMany({
         where: { irn },
         data: {
-          status: 'FAILED',
+          status: "FAILED",
           failedAt: new Date(),
           updatedAt: new Date(),
         },
@@ -818,7 +816,7 @@ export class FirsService {
    * This method can be called by a scheduled job to retry failed webhooks.
    */
   async processFailedWebhooks(): Promise<void> {
-    this.logger.log('Processing failed webhooks for retry');
+    this.logger.log("Processing failed webhooks for retry");
 
     try {
       const failedWebhooks = await this.prisma.webhookEvent.findMany({
@@ -826,7 +824,7 @@ export class FirsService {
           processed: false,
           retryCount: { lt: 3 }, // Maximum 3 retries
         },
-        orderBy: { receivedAt: 'asc' },
+        orderBy: { receivedAt: "asc" },
         take: 100, // Process 100 at a time
       });
 
@@ -861,7 +859,7 @@ export class FirsService {
         }
       }
     } catch (error) {
-      this.logger.error('Failed to process failed webhooks', error.stack);
+      this.logger.error("Failed to process failed webhooks", error.stack);
     }
   }
 

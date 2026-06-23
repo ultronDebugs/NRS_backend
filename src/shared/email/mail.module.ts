@@ -1,6 +1,6 @@
 // src/shared/email/email.module.ts
-import { Module, Global } from '@nestjs/common';
-import { EmailService } from './mail.service';
+import { Module, Global } from "@nestjs/common";
+import { EmailService } from "./mail.service";
 
 @Global() // Make EmailService available globally
 @Module({

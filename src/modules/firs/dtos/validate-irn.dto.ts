@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsString, Length } from "class-validator";
 
 /**
  * Data Transfer Object for validating an IRN (Invoice Reference Number).

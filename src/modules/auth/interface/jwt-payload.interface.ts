@@ -4,7 +4,7 @@ export interface JwtPayload {
   email: string;
   entityId: string;
   businessName: string;
-  role: string;
+  role?: string;
   iat?: number; // Issued at
   exp?: number; // Expiration
 }

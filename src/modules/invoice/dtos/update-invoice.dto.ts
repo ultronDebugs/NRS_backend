@@ -20,7 +20,7 @@ import { Type } from 'class-transformer';
 
 // Re-export all the nested DTOs from create-invoice.dto.ts
 
-class PostalAddressDto {
+class UpdatePostalAddressDto {
   @ApiProperty({
     description: 'Street name',
     example: '123 Main Street',
@@ -52,12 +52,28 @@ class PostalAddressDto {
   @IsString()
   @IsNotEmpty()
   country: string;
+
+  @ApiProperty({
+    description: 'Local Government Area',
+    example: 'Ikeja',
+  })
+  @IsString()
+  @IsNotEmpty()
+  lga: string;
+
+  @ApiProperty({
+    description: 'State',
+    example: 'Lagos',
+  })
+  @IsString()
+  @IsNotEmpty()
+  state: string;
 }
 
-class PartyDto {
+class UpdatePartyDto {
   @ApiProperty({
     description: 'Party name',
-    example: 'John Doe Limited',
+    example: 'Genius-Excel Digital Services Ltd',
   })
   @IsString()
   @IsNotEmpty()
@@ -65,7 +81,7 @@ class PartyDto {
 
   @ApiProperty({
     description: 'Tax Identification Number',
-    example: '12345678901',
+    example: '33779413-0001',
   })
   @IsString()
   @IsNotEmpty()
@@ -97,16 +113,16 @@ class PartyDto {
 
   @ApiPropertyOptional({
     description: 'Postal address',
-    type: PostalAddressDto,
+    type: UpdatePostalAddressDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => PostalAddressDto)
-  postal_address?: PostalAddressDto;
+  @Type(() => UpdatePostalAddressDto)
+  postal_address?: UpdatePostalAddressDto;
 }
 
 
- class DocumentReferenceDto {
+ class UpdateDocumentReferenceDto {
   @ApiProperty({
     description: 'Invoice Reference Number',
     example: 'ITW20853450-6997D6BB-20240703',
@@ -123,7 +139,7 @@ class PartyDto {
   issue_date: string;
 }
 
- class InvoiceDeliveryPeriodDto {
+ class UpdateInvoiceDeliveryPeriodDto {
   @ApiProperty({
     description: 'Start date',
     example: '2024-05-14',
@@ -139,7 +155,7 @@ class PartyDto {
   end_date: string;
 }
 
- class PaymentMeansDto {
+ class UpdatePaymentMeansDto {
   @ApiProperty({
     description: 'Payment means code',
     example: '10',
@@ -156,7 +172,7 @@ class PartyDto {
   payment_due_date: string;
 }
 
- class AllowanceChargeDto {
+ class UpdateAllowanceChargeDto {
   @ApiProperty({
     description: 'Charge indicator',
     example: true,
@@ -173,7 +189,7 @@ class PartyDto {
   amount: number;
 }
 
- class TaxCategoryDto {
+ class UpdateTaxCategoryDto {
   @ApiProperty({
     description: 'Category ID',
     example: 'S',
@@ -191,7 +207,7 @@ class PartyDto {
   percent: number;
 }
 
- class TaxSubtotalDto {
+ class UpdateTaxSubtotalDto {
   @ApiProperty({
     description: 'Taxable amount',
     example: 1000.00,
@@ -210,15 +226,15 @@ class PartyDto {
 
   @ApiPropertyOptional({
     description: 'Tax category',
-    type: TaxCategoryDto,
+    type: UpdateTaxCategoryDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => TaxCategoryDto)
-  tax_category?: TaxCategoryDto;
+  @Type(() => UpdateTaxCategoryDto)
+  tax_category?: UpdateTaxCategoryDto;
 }
 
- class TaxTotalDto {
+ class UpdateTaxTotalDto {
   @ApiProperty({
     description: 'Tax amount',
     example: 150.00,
@@ -229,16 +245,16 @@ class PartyDto {
 
   @ApiPropertyOptional({
     description: 'Tax subtotals',
-    type: [TaxSubtotalDto],
+    type: [UpdateTaxSubtotalDto],
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => TaxSubtotalDto)
-  tax_subtotal?: TaxSubtotalDto[];
+  @Type(() => UpdateTaxSubtotalDto)
+  tax_subtotal?: UpdateTaxSubtotalDto[];
 }
 
- class LegalMonetaryTotalDto {
+ class UpdateLegalMonetaryTotalDto {
   @ApiProperty({
     description: 'Line extension amount',
     example: 1000.00,
@@ -272,7 +288,7 @@ class PartyDto {
   payable_amount: number;
 }
 
- class ItemDto {
+ class UpdateItemDto {
   @ApiProperty({
     description: 'Item name',
     example: 'Software License',
@@ -298,7 +314,7 @@ class PartyDto {
   sellers_item_identification?: string;
 }
 
- class PriceDto {
+ class UpdatePriceDto {
   @ApiProperty({
     description: 'Price amount',
     example: 100.00,
@@ -317,17 +333,17 @@ class PartyDto {
 
   @ApiProperty({
     description: 'Price unit',
-    example: 'Each',
+    example: 'EA',
   })
   @IsString()
   @IsNotEmpty()
   price_unit: string;
 }
 
- class InvoiceLineDto {
+class UpdateInvoiceLineDto {
   @ApiProperty({
     description: 'HSN code',
-    example: 'CC-001',
+    example: '8523.80.20',
   })
   @IsString()
   @IsNotEmpty()
@@ -391,19 +407,19 @@ class PartyDto {
 
   @ApiProperty({
     description: 'Item details',
-    type: ItemDto,
+    type: UpdateItemDto,
   })
   @ValidateNested()
-  @Type(() => ItemDto)
-  item: ItemDto;
+  @Type(() => UpdateItemDto)
+  item: UpdateItemDto;
 
   @ApiProperty({
     description: 'Price details',
-    type: PriceDto,
+    type: UpdatePriceDto,
   })
   @ValidateNested()
-  @Type(() => PriceDto)
-  price: PriceDto;
+  @Type(() => UpdatePriceDto)
+  price: UpdatePriceDto;
 }
 
 export class UpdateInvoiceDto {
@@ -463,6 +479,16 @@ export class UpdateInvoiceDto {
   @MinLength(1)
   @MaxLength(10)
   invoice_type_code?: string;
+
+  @ApiPropertyOptional({
+    description: 'Invoice kind (B2B, B2C, B2G)',
+    example: 'B2B',
+    enum: ['B2B', 'B2C', 'B2G'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['B2B', 'B2C', 'B2G'])
+  invoice_kind?: string;
 
   @ApiPropertyOptional({
     description: 'Payment status',
@@ -539,85 +565,85 @@ export class UpdateInvoiceDto {
 
   @ApiPropertyOptional({
     description: 'Invoice delivery period',
-    type: InvoiceDeliveryPeriodDto,
+    type: UpdateInvoiceDeliveryPeriodDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => InvoiceDeliveryPeriodDto)
-  invoice_delivery_period?: InvoiceDeliveryPeriodDto;
+  @Type(() => UpdateInvoiceDeliveryPeriodDto)
+  invoice_delivery_period?: UpdateInvoiceDeliveryPeriodDto;
 
   @ApiPropertyOptional({
     description: 'Billing reference',
-    type: DocumentReferenceDto,
+    type: UpdateDocumentReferenceDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => DocumentReferenceDto)
-  billing_reference?: DocumentReferenceDto;
+  @Type(() => UpdateDocumentReferenceDto)
+  billing_reference?: UpdateDocumentReferenceDto;
 
   @ApiPropertyOptional({
     description: 'Dispatch document reference',
-    type: DocumentReferenceDto,
+    type: UpdateDocumentReferenceDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => DocumentReferenceDto)
-  dispatch_document_reference?: DocumentReferenceDto;
+  @Type(() => UpdateDocumentReferenceDto)
+  dispatch_document_reference?: UpdateDocumentReferenceDto;
 
   @ApiPropertyOptional({
     description: 'Receipt document reference',
-    type: DocumentReferenceDto,
+    type: UpdateDocumentReferenceDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => DocumentReferenceDto)
-  receipt_document_reference?: DocumentReferenceDto;
+  @Type(() => UpdateDocumentReferenceDto)
+  receipt_document_reference?: UpdateDocumentReferenceDto;
 
   @ApiPropertyOptional({
     description: 'Originator document reference',
-    type: DocumentReferenceDto,
+    type: UpdateDocumentReferenceDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => DocumentReferenceDto)
-  originator_document_reference?: DocumentReferenceDto;
+  @Type(() => UpdateDocumentReferenceDto)
+  originator_document_reference?: UpdateDocumentReferenceDto;
 
   @ApiPropertyOptional({
     description: 'Contract document reference',
-    type: DocumentReferenceDto,
+    type: UpdateDocumentReferenceDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => DocumentReferenceDto)
-  contract_document_reference?: DocumentReferenceDto;
+  @Type(() => UpdateDocumentReferenceDto)
+  contract_document_reference?: UpdateDocumentReferenceDto;
 
   @ApiPropertyOptional({
     description: 'Document references',
-    type: [DocumentReferenceDto],
+    type: [UpdateDocumentReferenceDto],
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => DocumentReferenceDto)
-  _document_reference?: DocumentReferenceDto[];
+  @Type(() => UpdateDocumentReferenceDto)
+  _document_reference?: UpdateDocumentReferenceDto[];
 
   @ApiPropertyOptional({
     description: 'Accounting supplier party',
-    type: PartyDto,
+    type: UpdatePartyDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => PartyDto)
-  accounting_supplier_party?: PartyDto;
+  @Type(() => UpdatePartyDto)
+  accounting_supplier_party?: UpdatePartyDto;
 
   @ApiPropertyOptional({
     description: 'Accounting customer party',
-    type: PartyDto,
+    type: UpdatePartyDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => PartyDto)
-  accounting_customer_party?: PartyDto;
+  @Type(() => UpdatePartyDto)
+  accounting_customer_party?: UpdatePartyDto;
 
   @ApiPropertyOptional({
     description: 'Actual delivery date',
@@ -629,13 +655,13 @@ export class UpdateInvoiceDto {
 
   @ApiPropertyOptional({
     description: 'Payment means',
-    type: [PaymentMeansDto],
+    type: [UpdatePaymentMeansDto],
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => PaymentMeansDto)
-  payment_means?: PaymentMeansDto[];
+  @Type(() => UpdatePaymentMeansDto)
+  payment_means?: UpdatePaymentMeansDto[];
 
   @ApiPropertyOptional({
     description: 'Payment terms note',
@@ -648,40 +674,40 @@ export class UpdateInvoiceDto {
 
   @ApiPropertyOptional({
     description: 'Allowance charges',
-    type: [AllowanceChargeDto],
+    type: [UpdateAllowanceChargeDto],
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => AllowanceChargeDto)
-  allowance_charge?: AllowanceChargeDto[];
+  @Type(() => UpdateAllowanceChargeDto)
+  allowance_charge?: UpdateAllowanceChargeDto[];
 
   @ApiPropertyOptional({
     description: 'Tax totals',
-    type: [TaxTotalDto],
+    type: [UpdateTaxTotalDto],
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => TaxTotalDto)
-  tax_total?: TaxTotalDto[];
+  @Type(() => UpdateTaxTotalDto)
+  tax_total?: UpdateTaxTotalDto[];
 
   @ApiPropertyOptional({
     description: 'Legal monetary total',
-    type: LegalMonetaryTotalDto,
+    type: UpdateLegalMonetaryTotalDto,
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => LegalMonetaryTotalDto)
-  legal_monetary_total?: LegalMonetaryTotalDto;
+  @Type(() => UpdateLegalMonetaryTotalDto)
+  legal_monetary_total?: UpdateLegalMonetaryTotalDto;
 
   @ApiPropertyOptional({
     description: 'Invoice lines',
-    type: [InvoiceLineDto],
+    type: [UpdateInvoiceLineDto],
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => InvoiceLineDto)
-  invoice_line?: InvoiceLineDto[];
+  @Type(() => UpdateInvoiceLineDto)
+  invoice_line?: UpdateInvoiceLineDto[];
 }

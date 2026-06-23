@@ -12,7 +12,8 @@ import {
   MinLength,
   MaxLength,
   Min,
-  Max
+  Max,
+  Matches
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -73,23 +74,40 @@ export class PostalAddressDto {
   @IsString()
   @IsNotEmpty()
   country: string;
+
+  @ApiProperty({
+    description: 'Local Government Area',
+    example: 'Ikeja',
+  })
+  @IsString()
+  @IsNotEmpty()
+  lga: string;
+
+  @ApiProperty({
+    description: 'State',
+    example: 'Lagos',
+  })
+  @IsString()
+  @IsNotEmpty()
+  state: string;
 }
 
 export class PartyDto {
   @ApiProperty({
     description: 'Party name',
-    example: 'Test Pls',
+    example: 'Genius-Excel Digital Services Ltd',
   })
   @IsString()
   @IsNotEmpty()
   party_name: string;
 
   @ApiProperty({
-    description: 'Tax Identification Number',
-    example: 'TIN-0099990001',
+    description: 'Tax Identification Number (TIN)',
+    example: '33779413-0001',
   })
   @IsString()
   @IsNotEmpty()
+  @Matches(/^[\d-]+$/, { message: 'TIN must contain only numbers and optional hyphens' })
   tin: string;
 
   @ApiProperty({
@@ -335,20 +353,23 @@ export class PriceDto {
 
   @ApiProperty({
     description: 'Price unit',
-    example: 'NGN per 1',
+    example: 'EA',
   })
   @IsString()
   @IsNotEmpty()
+  @MinLength(1)
+  @MaxLength(10)
   price_unit: string;
 }
 
 export class InvoiceLineDto {
   @ApiProperty({
     description: 'HSN code',
-    example: 'CC-001',
+    example: '8523.80.20',
   })
   @IsString()
   @IsNotEmpty()
+  @Matches(/^[\d\.]{4,15}$/, { message: 'HSN code must be a numeric/dotted string between 4 and 15 characters' })
   hsn_code: string;
 
   @ApiProperty({
@@ -425,6 +446,16 @@ export class InvoiceLineDto {
 }
 
 export class ValidateInvoiceDto {
+  @ApiProperty({
+    description: 'Invoice kind (B2B, B2C, B2G)',
+    example: 'B2B',
+    enum: ['B2B', 'B2C', 'B2G']
+  })
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(['B2B', 'B2C', 'B2G'])
+  invoice_kind: string;
+
   @ApiProperty({
     description: 'Business ID',
     example: '123e4567-e89b-12d3-a456-426614174000',

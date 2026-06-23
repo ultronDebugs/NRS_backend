@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import * as crypto from "crypto";
 
 /**
  * Parameters for generating FIRS QR code with optional keys.
@@ -18,10 +18,10 @@ function resolvePublicKeyPem(publicKeyBase64?: string): string {
   const base64Key = publicKeyBase64 ?? process.env.FIRS_PUBLIC_KEY_BASE64;
   if (!base64Key) {
     throw new Error(
-      'Missing FIRS_PUBLIC_KEY_BASE64: provide in payload, user settings, or env',
+      "Missing FIRS_PUBLIC_KEY_BASE64: provide in payload, user settings, or env",
     );
   }
-  return Buffer.from(base64Key, 'base64').toString('utf-8');
+  return Buffer.from(base64Key, "base64").toString("utf-8");
 }
 
 /**
@@ -30,11 +30,10 @@ function resolvePublicKeyPem(publicKeyBase64?: string): string {
  * @returns Base64 certificate string
  */
 function resolveCertificate(certificateBase64?: string): string {
-  const certificate =
-    certificateBase64 ?? process.env.FIRS_CERTIFICATE_BASE64;
+  const certificate = certificateBase64 ?? process.env.FIRS_CERTIFICATE_BASE64;
   if (!certificate) {
     throw new Error(
-      'Missing FIRS_CERTIFICATE_BASE64: provide in payload, user settings, or env',
+      "Missing FIRS_CERTIFICATE_BASE64: provide in payload, user settings, or env",
     );
   }
   return certificate;
@@ -54,7 +53,7 @@ function encryptPayload(payload: object, publicKeyPem: string): string {
     },
     Buffer.from(JSON.stringify(payload)),
   );
-  return encryptedBuffer.toString('base64');
+  return encryptedBuffer.toString("base64");
 }
 
 /**
@@ -63,7 +62,9 @@ function encryptPayload(payload: object, publicKeyPem: string): string {
  * @param params - IRN and optional keys
  * @returns The encrypted base64 string
  */
-export function generateFirsQrCodeWithKeys(params: GenerateQrCodeParams): string {
+export function generateFirsQrCodeWithKeys(
+  params: GenerateQrCodeParams,
+): string {
   const certificate = resolveCertificate(params.certificateBase64);
   const publicKeyPem = resolvePublicKeyPem(params.publicKeyBase64);
   const payload = {

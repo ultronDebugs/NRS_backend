@@ -1,7 +1,12 @@
-// src/modules/auth/dto/resend-verification.dto.ts
-import { IsEmail } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsEmail } from "class-validator";
 
 export class ResendVerificationDto {
+  @ApiProperty({
+    description: "The email address of the user",
+    example: "user@example.com",
+    required: true,
+  })
   @IsEmail()
   email: string;
 }

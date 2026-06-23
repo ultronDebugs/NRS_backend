@@ -1,16 +1,21 @@
 import {
-  ForbiddenException,
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from 'src/database';
-import { EmailService } from 'src/shared/email/mail.service';
-import { CreateUserDto, UpdateUserDto, RegisterUserDto } from './dtos';
-import * as bcrypt from 'bcryptjs';
-import { User } from './entities/user.entity';
-import * as crypto from 'crypto';
-
+} from "@nestjs/common";
+import { PrismaService } from "../../database";
+import { EmailService } from "../../shared/email/mail.service";
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  RegisterUserDto,
+  CompleteProfileDto,
+} from "./dtos";
+import * as bcrypt from "bcryptjs";
+import { User } from "./entities/user.entity";
+import * as crypto from "crypto";
+import { plainToInstance } from "class-transformer";
 
 @Injectable()
 export class UsersService {
@@ -28,7 +33,7 @@ export class UsersService {
     });
 
     if (existingUserByEmail) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
     }
 
     // Check if user already exists with the same entityId
@@ -43,11 +48,11 @@ export class UsersService {
     // }
 
     // Generate random password and hash it
-    const randomPassword = crypto.randomBytes(12).toString('hex');
+    const randomPassword = crypto.randomBytes(12).toString("hex");
     const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-    // Generate email verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    // Generate 6-digit OTP
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Create new user
@@ -58,7 +63,8 @@ export class UsersService {
         password: hashedPassword,
         // business fields intentionally omitted (nullable)
         role: createUserDto.role as any, // Cast to avoid type conflicts
-        isEmailVerified: true,
+        isEmailVerified: false,
+        isProfileComplete: false,
         emailVerificationToken: verificationToken,
         emailVerificationExpires: verificationExpires,
       },
@@ -78,11 +84,18 @@ export class UsersService {
 
     return {
       success: true,
-      user: this.sanitizeUser(this.mapPrismaUserToEntity(user)),
+      user: this.mapPrismaUserToEntity(user),
+      password: randomPassword,
     };
   }
 
-  async createUserWithDirectors(registerUserDto: RegisterUserDto): Promise<User> {
+  /**
+   * Lightweight registration: creates a user with only email and password.
+   * Business information is collected later via completeProfile().
+   */
+  async createUserLightweight(
+    registerUserDto: RegisterUserDto,
+  ): Promise<User> {
     // Check if user already exists with the same email
     const existingUserByEmail = await this.prisma.user.findUnique({
       where: {
@@ -91,47 +104,93 @@ export class UsersService {
     });
 
     if (existingUserByEmail) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
+    }
+
+    const role = registerUserDto.role ?? "USER";
+    if (!["USER", "CLIENT"].includes(role)) {
+      throw new BadRequestException("Only USER or CLIENT can self-register");
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(registerUserDto.password, 10);
 
-    // Generate email verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    // Generate 6-digit OTP
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Create new user with directors
+    // Create new user with minimal info
     const user = await this.prisma.user.create({
       data: {
         email: registerUserDto.email,
         password: hashedPassword,
-        businessName: registerUserDto.businessName,
-        businessAddress: registerUserDto.businessAddress,
-        rcNumber: registerUserDto.rcNumber,
-        role: 'USER' as any,
-        dateOfIncorporation: registerUserDto.dateOfIncorporation 
-          ? new Date(registerUserDto.dateOfIncorporation) 
-          : new Date(),
-        isEmailVerified: true,
+        role: role as any,
+        isEmailVerified: false,
+        isProfileComplete: false,
         emailVerificationToken: verificationToken,
         emailVerificationExpires: verificationExpires,
-        directors: {
-          create: registerUserDto.directors.map(director => ({
-            firstName: director.firstName,
-            lastName: director.lastName,
-            email: director.email,
-            phoneNumber: director.phoneNumber,
-            nin: director.nin,
-          })),
-        },
+      },
+    });
+
+    return this.mapPrismaUserToEntity(user);
+  }
+
+  /**
+   * Phase 2: completes or updates a user's profile with business information and directors.
+   */
+  async completeProfile(
+    userId: number,
+    completeProfileDto: CompleteProfileDto,
+  ): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    // Check entityId uniqueness
+    if (completeProfileDto.entityId) {
+      const existingEntity = await this.prisma.user.findUnique({
+        where: { entityId: completeProfileDto.entityId },
+      });
+      if (existingEntity && existingEntity.id !== userId) {
+        throw new ConflictException("This entity ID is already in use");
+      }
+    }
+
+    // Update user with business info and optionally replace directors
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        entityId: completeProfileDto.entityId,
+        businessName: completeProfileDto.businessName,
+        businessAddress: completeProfileDto.businessAddress,
+        rcNumber: completeProfileDto.rcNumber,
+        dateOfIncorporation: completeProfileDto.dateOfIncorporation
+          ? new Date(completeProfileDto.dateOfIncorporation)
+          : new Date(),
+        isProfileComplete: true,
+        ...(completeProfileDto.directors && {
+          directors: {
+            deleteMany: {},
+            create: completeProfileDto.directors.map((d) => ({
+              firstName: d.firstName,
+              lastName: d.lastName,
+              email: d.email,
+              phoneNumber: d.phoneNumber,
+              nin: d.nin,
+            })),
+          },
+        }),
       },
       include: {
         directors: true,
       },
     });
 
-    return this.mapPrismaUserToEntity(user);
+    return this.mapPrismaUserToEntity(updatedUser);
   }
 
   async findAllUsers(): Promise<any[]> {
@@ -139,24 +198,14 @@ export class UsersService {
       where: { isActive: true },
     });
 
-    return users.map((user) => this.sanitizeUser(user));
+    return users.map(({ password, ...user }) => user);
   }
 
   async findUserById(id: number): Promise<User | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        entityId: true,
-        email: true,
-        businessAddress: true,
-        businessName: true,
-        rcNumber: true,
-        role: true,
-        isEmailVerified: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        directors: true,
         entity: {
           include: {
             businesses: true,
@@ -169,6 +218,8 @@ export class UsersService {
       return null;
     }
     return this.mapPrismaUserToEntity(user);
+    // const { password, ...userWithoutPassword } = user;
+    // return userWithoutPassword;
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
@@ -189,7 +240,7 @@ export class UsersService {
     });
 
     if (!existingUser) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     const updatedUser = await this.prisma.user.update({
@@ -209,7 +260,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     await this.prisma.user.update({
@@ -218,17 +269,11 @@ export class UsersService {
     });
   }
 
-  async removeAsRequester(id: number, requesterId: number, requesterRole: string): Promise<void> {
-    if (requesterRole !== 'ADMIN' && id !== requesterId) {
-      throw new ForbiddenException('You can only deactivate your own account');
-    }
-    await this.remove(id);
-  }
-
-  async findByVerificationToken(token: string): Promise<User | null> {
+  async findByEmailAndOtp(email: string, otp: string): Promise<User | null> {
     const user = await this.prisma.user.findFirst({
       where: {
-        emailVerificationToken: token,
+        email: email,
+        emailVerificationToken: otp,
         emailVerificationExpires: {
           gt: new Date(),
         },
@@ -241,11 +286,11 @@ export class UsersService {
 
     return this.mapPrismaUserToEntity(user);
   }
-  async verifyEmail(token: string): Promise<User> {
-    const user = await this.findByVerificationToken(token);
+  async verifyEmail(email: string, otp: string): Promise<User> {
+    const user = await this.findByEmailAndOtp(email, otp);
 
     if (!user) {
-      throw new NotFoundException('Invalid or expired verification token');
+      throw new BadRequestException("Invalid or expired verification OTP");
     }
 
     const updatedUser = await this.prisma.user.update({
@@ -264,14 +309,14 @@ export class UsersService {
     const user = await this.findUserByEmail(email);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     if (user.isEmailVerified) {
-      throw new ConflictException('Email is already verified');
+      throw new ConflictException("Email is already verified");
     }
 
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     await this.prisma.user.update({
@@ -285,72 +330,25 @@ export class UsersService {
     return verificationToken;
   }
 
-  /**
-   * Ensures the user exists and has no entity ID set yet (one-time bind).
-   */
-  async assertEntityIdUnset(userId: number): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, entityId: true },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.entityId) {
-      throw new ConflictException(
-        'Entity ID is already set for this account and cannot be changed here',
-      );
-    }
-  }
-
-  /**
-   * Ensures no other account is already using this entity ID.
-   */
-  async assertEntityIdNotUsedByOtherUser(
-    entityId: string,
-    userId: number,
-  ): Promise<void> {
-    const existing = await this.prisma.user.findUnique({
-      where: { entityId },
-      select: { id: true },
-    });
-
-    if (existing && existing.id !== userId) {
-      throw new ConflictException(
-        'This entity ID is already linked to another account',
-      );
-    }
-  }
-
-  async setUserEntityId(userId: number, entityId: string): Promise<User> {
-    const updated = await this.prisma.user.update({
-      where: { id: userId },
-      data: { entityId },
-    });
-    return this.mapPrismaUserToEntity(updated);
-  }
-
   private mapPrismaUserToEntity(u: any): User {
-    return {
-      ...(u as User),
+    let maskedDirectors = u.directors;
+    if (Array.isArray(u.directors)) {
+      maskedDirectors = u.directors.map((d: any) => ({
+        ...d,
+        nin: d.nin ? d.nin.replace(/^\d{7}/, '*******') : null,
+      }));
+    }
+
+    const plain = {
+      ...u,
+      directors: maskedDirectors,
       businessName: u.businessName ?? undefined,
       businessAddress: u.businessAddress ?? undefined,
       rcNumber: u.rcNumber ?? undefined,
       entityId: u.entityId ?? undefined,
       emailVerificationToken: u.emailVerificationToken ?? undefined,
       emailVerificationExpires: u.emailVerificationExpires ?? undefined,
-    } as User;
-  }
-
-  private sanitizeUser(user: any) {
-    const {
-      password,
-      emailVerificationToken,
-      emailVerificationExpires,
-      ...safeUser
-    } = user;
-    return safeUser;
+    };
+    return plainToInstance(User, plain);
   }
 }

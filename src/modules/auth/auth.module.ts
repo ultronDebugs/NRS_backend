@@ -1,13 +1,13 @@
-import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { ConfigService } from '@nestjs/config';
-import { UsersModule } from '../users/users.module';
-import { DatabaseModule } from 'src/database';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { JwtStrategy } from './strategy';
-import { EmailModule } from 'src/shared/email/mail.module';
+import { Module } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import { PassportModule } from "@nestjs/passport";
+import { ConfigService } from "@nestjs/config";
+import { UsersModule } from "../users/users.module";
+import { DatabaseModule } from "../../database";
+import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
+import { JwtStrategy } from "./strategy";
+import { EmailModule } from "../../shared/email/mail.module";
 
 const DEFAULT_JWT_EXPIRATION_SECONDS = 3600;
 
@@ -44,10 +44,10 @@ function parseExpirationToSeconds(value: string): number {
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const expiration = config.get<string>('JWT_EXPIRATION', '3600');
+        const expiration = config.get<string>("JWT_EXPIRATION", "3600");
         const expiresInSeconds = parseExpirationToSeconds(expiration);
         return {
-          secret: config.get<string>('JWT_SECRET'),
+          secret: config.get<string>("JWT_SECRET"),
           signOptions: {
             expiresIn: expiresInSeconds,
           },
@@ -56,7 +56,7 @@ function parseExpirationToSeconds(value: string): number {
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, ConfigService],
+  providers: [AuthService, JwtStrategy],
   exports: [],
 })
-export class AuthModule {}
+export class AuthModule { }

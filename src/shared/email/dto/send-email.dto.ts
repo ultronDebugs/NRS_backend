@@ -1,5 +1,5 @@
 // src/shared/email/dto/send-email.dto.ts
-import { IsEmail, IsString, IsOptional, IsArray } from 'class-validator';
+import { IsEmail, IsString, IsOptional, IsArray } from "class-validator";
 
 export class SendEmailDto {
   @IsEmail({}, { each: true })

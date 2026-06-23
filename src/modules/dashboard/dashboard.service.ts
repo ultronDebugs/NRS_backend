@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../../database/prisma.service";
 
 export interface DashboardSummary {
   totalInvoices: number;
@@ -10,7 +10,7 @@ export interface DashboardSummary {
   lastInvoiceIssuedAt?: string;
 }
 
-export interface PartnerDashboardSummary {
+export interface ClientDashboardSummary {
   totalApiCalls: number;
   successfulCalls: number;
   failedCalls: number;
@@ -24,7 +24,7 @@ export interface PartnerDashboardSummary {
 
 export interface AdminDashboardSummary {
   totalUsers: number;
-  totalPartners: number;
+  totalClients: number;
   totalInvoices: number;
   totalApiCalls: number;
   recentUsers: any[];
@@ -40,17 +40,26 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getDashboardSummary(userId: number): Promise<DashboardSummary> {
-    const [totalInvoices, pendingInvoices, confirmedInvoices, signedInvoices, entity] = await Promise.all([
+    const [
+      totalInvoices,
+      pendingInvoices,
+      confirmedInvoices,
+      signedInvoices,
+      entity,
+    ] = await Promise.all([
       this.prisma.invoice.count({ where: { userId } }),
-      this.prisma.invoice.count({ where: { userId, status: 'PENDING' } }),
-      this.prisma.invoice.count({ where: { userId, status: 'CONFIRMED' } }),
-      this.prisma.invoice.count({ where: { userId, status: 'SIGNED' } }),
-      this.prisma.entity.findFirst({ where: { userId }, include: { businesses: true } }),
+      this.prisma.invoice.count({ where: { userId, status: "PENDING" } }),
+      this.prisma.invoice.count({ where: { userId, status: "CONFIRMED" } }),
+      this.prisma.invoice.count({ where: { userId, status: "SIGNED" } }),
+      this.prisma.entity.findFirst({
+        where: { userId },
+        include: { businesses: true },
+      }),
     ]);
 
     const lastInvoice = await this.prisma.invoice.findFirst({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       select: { createdAt: true },
     });
 
@@ -60,25 +69,52 @@ export class DashboardService {
       confirmedInvoices,
       signedInvoices,
       totalBusinesses: entity?.businesses?.length ?? 0,
-      lastInvoiceIssuedAt: lastInvoice?.createdAt ? lastInvoice.createdAt.toISOString() : undefined,
+      lastInvoiceIssuedAt: lastInvoice?.createdAt
+        ? lastInvoice.createdAt.toISOString()
+        : undefined,
     };
   }
 
-  async getPartnerDashboardSummary(userId: number): Promise<PartnerDashboardSummary> {
-    const [totalApiCalls, successfulCalls, failedCalls, validateInvoiceCalls, signInvoiceCalls, confirmInvoiceCalls, validateIrnCalls, apiCredential] = await Promise.all([
-      (this.prisma as any).partnerApiLog.count({ where: { userId } }),
-      (this.prisma as any).partnerApiLog.count({ where: { userId, responseStatus: { gte: 200, lt: 300 } } }),
-      (this.prisma as any).partnerApiLog.count({ where: { userId, responseStatus: { gte: 400 } } }),
-      (this.prisma as any).partnerApiLog.count({ where: { userId, endpoint: '/api/v1/invoice/validate' } }),
-      (this.prisma as any).partnerApiLog.count({ where: { userId, endpoint: '/api/v1/invoice/sign' } }),
-      (this.prisma as any).partnerApiLog.count({ where: { userId, endpoint: { contains: '/api/v1/invoice/confirm/' } } }),
-      (this.prisma as any).partnerApiLog.count({ where: { userId, endpoint: '/api/v1/invoice/irn/validate' } }),
-      (this.prisma as any).partnerApiCredential.findUnique({ where: { userId } }),
+  async getClientDashboardSummary(
+    userId: number,
+  ): Promise<ClientDashboardSummary> {
+    const [
+      totalApiCalls,
+      successfulCalls,
+      failedCalls,
+      validateInvoiceCalls,
+      signInvoiceCalls,
+      confirmInvoiceCalls,
+      validateIrnCalls,
+      apiCredential,
+    ] = await Promise.all([
+      (this.prisma as any).clientApiLog.count({ where: { userId } }),
+      (this.prisma as any).clientApiLog.count({
+        where: { userId, responseStatus: { gte: 200, lt: 300 } },
+      }),
+      (this.prisma as any).clientApiLog.count({
+        where: { userId, responseStatus: { gte: 400 } },
+      }),
+      (this.prisma as any).clientApiLog.count({
+        where: { userId, endpoint: "/api/v1/invoice/validate" },
+      }),
+      (this.prisma as any).clientApiLog.count({
+        where: { userId, endpoint: "/api/v1/invoice/sign" },
+      }),
+      (this.prisma as any).clientApiLog.count({
+        where: { userId, endpoint: { contains: "/api/v1/invoice/confirm/" } },
+      }),
+      (this.prisma as any).clientApiLog.count({
+        where: { userId, endpoint: "/api/v1/invoice/irn/validate" },
+      }),
+      (this.prisma as any).clientApiCredential.findUnique({
+        where: { userId },
+      }),
     ]);
 
-    const lastApiCall = await (this.prisma as any).partnerApiLog.findFirst({
+    const lastApiCall = await (this.prisma as any).clientApiLog.findFirst({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       select: { createdAt: true },
     });
 
@@ -90,22 +126,25 @@ export class DashboardService {
       signInvoiceCalls,
       confirmInvoiceCalls,
       validateIrnCalls,
-      lastApiCallAt: lastApiCall?.createdAt ? lastApiCall.createdAt.toISOString() : undefined,
+      lastApiCallAt: lastApiCall?.createdAt
+        ? lastApiCall.createdAt.toISOString()
+        : undefined,
       apiKeyActive: apiCredential?.isActive ?? false,
     };
   }
 
   async getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
-    const [totalUsers, totalPartners, totalInvoices, totalApiCalls] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.count({ where: { role: 'PARTNER' } }),
-      this.prisma.invoice.count(),
-      (this.prisma as any).partnerApiLog.count(),
-    ]);
+    const [totalUsers, totalClients, totalInvoices, totalApiCalls] =
+      await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.user.count({ where: { role: "CLIENT" } }),
+        this.prisma.invoice.count(),
+        (this.prisma as any).clientApiLog.count(),
+      ]);
 
     const recentUsers = await this.prisma.user.findMany({
       take: 5,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         email: true,
@@ -116,9 +155,9 @@ export class DashboardService {
       },
     });
 
-    const recentApiCalls = await (this.prisma as any).partnerApiLog.findMany({
+    const recentApiCalls = await (this.prisma as any).clientApiLog.findMany({
       take: 10,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         user: {
           select: {
@@ -133,12 +172,16 @@ export class DashboardService {
     // Check system health
     const systemHealth = {
       databaseConnected: true, // If we got here, DB is connected
-      firsApiConfigured: !!(process.env.FIRS_API_URL && process.env.FIRS_API_KEY && process.env.FIRS_API_SECRET),
+      firsApiConfigured: !!(
+        process.env.FIRS_API_URL &&
+        process.env.FIRS_API_KEY &&
+        process.env.FIRS_API_SECRET
+      ),
     };
 
     return {
       totalUsers,
-      totalPartners,
+      totalClients,
       totalInvoices,
       totalApiCalls,
       recentUsers,
@@ -147,5 +190,3 @@ export class DashboardService {
     };
   }
 }
-
-

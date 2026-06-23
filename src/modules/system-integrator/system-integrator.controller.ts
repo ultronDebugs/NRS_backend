@@ -11,22 +11,20 @@ import {
   UsePipes,
   ValidationPipe,
   ParseIntPipe,
-  ForbiddenException,
-} from '@nestjs/common';
+} from "@nestjs/common";
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiParam,
   ApiBody,
-} from '@nestjs/swagger';
-import { SystemIntegratorService } from './system-integrator.service';
-import { ValidateInvoiceDto } from '../firs/dtos/validete-invoice.dto';
-import { GenerateQrCodeDto, UpdateFirsSettingsDto } from './dtos';
-import { CurrentUser } from 'src/common/decorators';
+} from "@nestjs/swagger";
+import { SystemIntegratorService } from "./system-integrator.service";
+import { FirsValidateInvoiceDto } from "../firs/dtos/validete-invoice.dto";
+import { GenerateQrCodeDto, UpdateFirsSettingsDto } from "./dtos";
 
-@ApiTags('System Integrator')
-@Controller('api/v1/system-integrator')
+@ApiTags("System Integrator")
+@Controller("api/v1/system-integrator")
 export class SystemIntegratorController {
   private readonly logger = new Logger(SystemIntegratorController.name);
 
@@ -39,35 +37,34 @@ export class SystemIntegratorController {
    * @param params - The invoice data to validate.
    * @returns The validation result.
    */
-  @Post('validate-invoice')
+  @Post("validate-invoice")
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ transform: true }))
   @ApiOperation({
-    summary: 'Validate invoice',
+    summary: "Validate invoice",
     description:
-      'Validates an invoice using the FIRS API. Same implementation as invoice module.',
+      "Validates an invoice using the FIRS API. Same implementation as invoice module.",
   })
-  @ApiBody({ type: ValidateInvoiceDto })
+  @ApiBody({ type: FirsValidateInvoiceDto })
   @ApiResponse({
     status: 200,
-    description: 'Invoice validation result',
+    description: "Invoice validation result",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        ok: { type: 'boolean' },
+        ok: { type: "boolean" },
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiResponse({ status: 400, description: "Bad request" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 500, description: "Internal server error" })
   async validateInvoice(
-    @Body() params: ValidateInvoiceDto,
+    @Body() params: FirsValidateInvoiceDto,
   ): Promise<{ ok: boolean }> {
     this.logger.log(`Received validate invoice request for IRN: ${params.irn}`);
     try {
-      const result =
-        await this.systemIntegratorService.validateInvoice(params);
+      const result = await this.systemIntegratorService.validateInvoice(params);
       this.logger.log(`Invoice validation completed for IRN: ${params.irn}`);
       return result;
     } catch (error) {
@@ -84,28 +81,28 @@ export class SystemIntegratorController {
    * @param params - The QR code generation parameters.
    * @returns The QR code data.
    */
-  @Post('qr-code')
+  @Post("qr-code")
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ transform: true }))
   @ApiOperation({
-    summary: 'Generate QR code',
+    summary: "Generate QR code",
     description:
-      'Generates FIRS QR code encrypted payload (same as invoice module). Supports passing firsPublicKeyBase64 and firsCertificateBase64 in payload, or userId for stored settings, or env vars.',
+      "Generates FIRS QR code encrypted payload (same as invoice module). Supports passing firsPublicKeyBase64 and firsCertificateBase64 in payload, or userId for stored settings, or env vars.",
   })
   @ApiBody({ type: GenerateQrCodeDto })
   @ApiResponse({
     status: 200,
-    description: 'QR code generation result',
+    description: "QR code generation result",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        qrCode: { type: 'string' },
+        qrCode: { type: "string" },
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiResponse({ status: 400, description: "Bad request" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  @ApiResponse({ status: 500, description: "Internal server error" })
   async generateQrCode(
     @Body() params: GenerateQrCodeDto,
   ): Promise<{ qrCode: string }> {
@@ -128,43 +125,37 @@ export class SystemIntegratorController {
    * @param userId - The user ID.
    * @returns The FIRS settings.
    */
-  @Get('firs-settings/:userId')
+  @Get("firs-settings/:userId")
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ transform: true }))
   @ApiOperation({
-    summary: 'Get FIRS settings for a user',
+    summary: "Get FIRS settings for a user",
     description:
-      'Retrieves stored FIRS_PUBLIC_KEY_BASE64 and FIRS_CERTIFICATE_BASE64 for the given user',
+      "Retrieves stored FIRS_PUBLIC_KEY_BASE64 and FIRS_CERTIFICATE_BASE64 for the given user",
   })
-  @ApiParam({ name: 'userId', description: 'User ID', example: 1 })
+  @ApiParam({ name: "userId", description: "User ID", example: 1 })
   @ApiResponse({
     status: 200,
-    description: 'FIRS settings retrieved successfully',
+    description: "FIRS settings retrieved successfully",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        firsPublicKeyBase64: { type: 'string', nullable: true },
-        firsCertificateBase64: { type: 'string', nullable: true },
+        firsPublicKeyBase64: { type: "string", nullable: true },
+        firsCertificateBase64: { type: "string", nullable: true },
       },
     },
   })
-  @ApiResponse({ status: 404, description: 'Settings not found for user' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiResponse({ status: 404, description: "Settings not found for user" })
+  @ApiResponse({ status: 500, description: "Internal server error" })
   async getFirsSettings(
-    @CurrentUser() requester: any,
-    @Param('userId', ParseIntPipe) userId: number,
+    @Param("userId", ParseIntPipe) userId: number,
   ): Promise<{
     firsPublicKeyBase64: string | null;
     firsCertificateBase64: string | null;
   } | null> {
-    if (requester.role !== 'ADMIN' && requester.id !== userId) {
-      throw new ForbiddenException('You can only access your own settings');
-    }
-
     this.logger.log(`Received get FIRS settings request for user: ${userId}`);
     try {
-      const result =
-        await this.systemIntegratorService.getFirsSettings(userId);
+      const result = await this.systemIntegratorService.getFirsSettings(userId);
       this.logger.log(`FIRS settings retrieved for user: ${userId}`);
       return result;
     } catch (error) {
@@ -181,41 +172,34 @@ export class SystemIntegratorController {
    * @param params - The settings to update.
    * @returns The updated settings.
    */
-  @Put('firs-settings')
+  @Put("firs-settings")
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ transform: true }))
   @ApiOperation({
-    summary: 'Set FIRS settings for a user',
+    summary: "Set FIRS settings for a user",
     description:
-      'Stores FIRS_PUBLIC_KEY_BASE64 and FIRS_CERTIFICATE_BASE64 for the given user',
+      "Stores FIRS_PUBLIC_KEY_BASE64 and FIRS_CERTIFICATE_BASE64 for the given user",
   })
   @ApiBody({ type: UpdateFirsSettingsDto })
   @ApiResponse({
     status: 200,
-    description: 'FIRS settings updated successfully',
+    description: "FIRS settings updated successfully",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        userId: { type: 'number' },
-        firsPublicKeyBase64: { type: 'string', nullable: true },
-        firsCertificateBase64: { type: 'string', nullable: true },
+        userId: { type: "number" },
+        firsPublicKeyBase64: { type: "string", nullable: true },
+        firsCertificateBase64: { type: "string", nullable: true },
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  async updateFirsSettings(
-    @CurrentUser() requester: any,
-    @Body() params: UpdateFirsSettingsDto,
-  ): Promise<{
+  @ApiResponse({ status: 400, description: "Bad request" })
+  @ApiResponse({ status: 500, description: "Internal server error" })
+  async updateFirsSettings(@Body() params: UpdateFirsSettingsDto): Promise<{
     userId: number;
     firsPublicKeyBase64: string | null;
     firsCertificateBase64: string | null;
   }> {
-    if (requester.role !== 'ADMIN' && requester.id !== params.userId) {
-      throw new ForbiddenException('You can only update your own settings');
-    }
-
     this.logger.log(
       `Received update FIRS settings request for user: ${params.userId}`,
     );
@@ -236,26 +220,25 @@ export class SystemIntegratorController {
   /**
    * Admin/test endpoint for smoke testing.
    */
-  @Post('test')
+  @Post("test")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Test endpoint for System Integrator module' })
+  @ApiOperation({ summary: "Test endpoint for System Integrator module" })
   @ApiResponse({
     status: 200,
-    description: 'Test successful',
+    description: "Test successful",
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
-        message: { type: 'string' },
-        timestamp: { type: 'string' },
+        message: { type: "string" },
+        timestamp: { type: "string" },
       },
     },
   })
   async test(): Promise<{ message: string; timestamp: string }> {
-    this.logger.log('System Integrator test endpoint called');
+    this.logger.log("System Integrator test endpoint called");
     return {
-      message: 'System Integrator module is working',
+      message: "System Integrator module is working",
       timestamp: new Date().toISOString(),
     };
   }
 }
-

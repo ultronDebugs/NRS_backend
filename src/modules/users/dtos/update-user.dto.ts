@@ -1,5 +1,12 @@
 // src/modules/users/dto/update-user.dto.ts
-import { IsEmail, IsString, MinLength, IsIn, IsBoolean, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  IsIn,
+  IsBoolean,
+  IsOptional,
+} from "class-validator";
 
 export class UpdateUserDto {
   @IsOptional()
@@ -27,7 +34,7 @@ export class UpdateUserDto {
   rcNumber?: string;
 
   @IsOptional()
-  @IsIn(['USER', 'ADMIN', 'PARTNER'])
+  @IsIn(["USER", "ADMIN", "CLIENT"])
   role?: string;
 
   @IsOptional()
