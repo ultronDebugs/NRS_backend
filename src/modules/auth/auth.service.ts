@@ -510,6 +510,14 @@ export class AuthService {
       );
 
       // MOCK DATA: Bypassing FIRS API because we don't have an SI key yet.
+
+      if (!dto?.businessId) {
+        throw new BadRequestException("Business ID must be provided as it is assigned by FIRS.");
+      }
+      if (!dto?.irnTemplate) {
+        throw new BadRequestException("IRN Template must be provided.");
+      }
+
       const entityData: any = {
         id: entityId,
         reference: "MOCK_REF",
@@ -519,7 +527,7 @@ export class AuthService {
         updated_at: new Date().toISOString(),
         businesses: [
           {
-            id: dto?.businessId || process.env.FIRS_BUSINESS_ID || "ac30649a-8243-4fc8-b6a5-654606b8e734",
+            id: dto.businessId,
             reference: "MOCK_BIZ_REF",
             name: dto?.businessName || "MBS FISCAI DIGITAL SERVICES LTD",
             tin: "33779413-0001",
@@ -529,7 +537,7 @@ export class AuthService {
             is_realtime_reporting: false,
             notification_channels: "EMAIL",
             erp_system: dto?.erpName || "Others",
-            irn_template: dto?.irnTemplate || "{{invoice_number}}-9BB244DE-{{YYYYMMDD}}",
+            irn_template: dto.irnTemplate,
             is_active: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -541,7 +549,18 @@ export class AuthService {
         `Successfully fetched entity data for entityId: ${entityId}`,
       );
 
-      // Check if entity already exists for this user
+      // Check if this entity ID is already claimed by another user
+      const entityById = await this.prisma.entity.findUnique({
+        where: { id: entityId },
+      });
+
+      if (entityById && entityById.userId !== userId) {
+        throw new ConflictException(
+          `Entity ${entityId} is already registered to another user.`,
+        );
+      }
+
+      // Check if this user already has an entity
       const existingEntity = await this.prisma.entity.findFirst({
         where: { userId },
         include: { businesses: true },
@@ -552,10 +571,11 @@ export class AuthService {
           `Entity already exists for user ${userId}, updating...`,
         );
 
-        // Update existing entity
+        // Update existing entity (may change the entity ID if user re-registered with FIRS)
         const updatedEntity = await this.prisma.entity.update({
           where: { id: existingEntity.id },
           data: {
+            id: entityData.id,
             reference: entityData.reference,
             customSettings: entityData.custom_settings
               ? JSON.stringify(entityData.custom_settings)
@@ -569,42 +589,58 @@ export class AuthService {
           },
         });
 
-        // Delete existing businesses and create new ones
-        await this.prisma.business.deleteMany({
-          where: { entityId: existingEntity.id },
-        });
-
-        // Map existing credentials to preserve them
-        const existingBusinessesMap = new Map(existingEntity.businesses.map(b => [b.id, b]));
-
-        // Create new businesses
+        // Upsert businesses instead of deleting and recreating
         if (entityData.businesses && entityData.businesses.length > 0) {
-          await this.prisma.business.createMany({
-            data: entityData.businesses.map((business: any) => ({
-              id: business.id,
-              reference: business.reference,
-              name: business.name,
-              customSettings: business.custom_settings
-                ? JSON.stringify(business.custom_settings)
-                : null,
-              tin: business.tin,
-              sector: business.sector,
-              annualTurnover: business.annual_turnover,
-              supportPeppol: business.support_peppol,
-              isRealtimeReporting: business.is_realtime_reporting,
-              notificationChannels: business.notification_channels,
-              erpSystem: business.erp_system,
-              irnTemplate: this.extractIrnTemplate(business.irn_template),
-              isActive: business.is_active,
-              createdAt: new Date(business.created_at),
-              updatedAt: new Date(business.updated_at),
-              entityId: existingEntity.id,
-              firsApiKey: dto?.firsApiKey ? encryptIfPlaintext(dto.firsApiKey) : existingBusinessesMap.get(business.id)?.firsApiKey,
-              firsApiSecret: dto?.firsApiSecret ? encryptIfPlaintext(dto.firsApiSecret) : existingBusinessesMap.get(business.id)?.firsApiSecret,
-              firsPublicKeyBase64: dto?.firsPublicKeyBase64 ?? existingBusinessesMap.get(business.id)?.firsPublicKeyBase64,
-              firsCertificateBase64: dto?.firsCertificateBase64 ?? existingBusinessesMap.get(business.id)?.firsCertificateBase64,
-            })),
-          });
+          for (const business of entityData.businesses) {
+            await this.prisma.business.upsert({
+              where: { id: business.id },
+              update: {
+                reference: business.reference,
+                name: business.name,
+                customSettings: business.custom_settings
+                  ? JSON.stringify(business.custom_settings)
+                  : null,
+                tin: business.tin,
+                sector: business.sector,
+                annualTurnover: business.annual_turnover,
+                supportPeppol: business.support_peppol,
+                isRealtimeReporting: business.is_realtime_reporting,
+                notificationChannels: business.notification_channels,
+                erpSystem: business.erp_system,
+                irnTemplate: this.extractIrnTemplate(business.irn_template),
+                isActive: business.is_active,
+                updatedAt: new Date(),
+                firsApiKey: dto?.firsApiKey ? encryptIfPlaintext(dto.firsApiKey) : undefined,
+                firsApiSecret: dto?.firsApiSecret ? encryptIfPlaintext(dto.firsApiSecret) : undefined,
+                firsPublicKeyBase64: dto?.firsPublicKeyBase64 ?? undefined,
+                firsCertificateBase64: dto?.firsCertificateBase64 ?? undefined,
+              },
+              create: {
+                id: business.id,
+                reference: business.reference,
+                name: business.name,
+                customSettings: business.custom_settings
+                  ? JSON.stringify(business.custom_settings)
+                  : null,
+                tin: business.tin,
+                sector: business.sector,
+                annualTurnover: business.annual_turnover,
+                supportPeppol: business.support_peppol,
+                isRealtimeReporting: business.is_realtime_reporting,
+                notificationChannels: business.notification_channels,
+                erpSystem: business.erp_system,
+                irnTemplate: this.extractIrnTemplate(business.irn_template),
+                isActive: business.is_active,
+                createdAt: new Date(business.created_at),
+                updatedAt: new Date(business.updated_at),
+                entityId: updatedEntity.id,
+                firsApiKey: encryptIfPlaintext(dto?.firsApiKey),
+                firsApiSecret: encryptIfPlaintext(dto?.firsApiSecret),
+                firsPublicKeyBase64: dto?.firsPublicKeyBase64,
+                firsCertificateBase64: dto?.firsCertificateBase64,
+              },
+            });
+          }
         }
 
         return updatedEntity;
@@ -666,6 +702,11 @@ export class AuthService {
         `Failed to fetch and save entity data for entityId: ${entityId}`,
         error.stack,
       );
+
+      // Re-throw NestJS HttpExceptions directly (ConflictException, BadRequestException, etc.)
+      if (error.status && error.getResponse) {
+        throw error;
+      }
 
       if (error.response) {
         throw new BadGatewayException(
