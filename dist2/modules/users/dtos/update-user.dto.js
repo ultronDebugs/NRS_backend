@@ -52,7 +52,7 @@ __decorate([
 ], UpdateUserDto.prototype, "rcNumber", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsIn)(["USER", "ADMIN", "CLIENT"]),
+    (0, class_validator_1.IsIn)(["USER", "ADMIN", "TENANT"]),
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "role", void 0);
 __decorate([

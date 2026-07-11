@@ -365,11 +365,11 @@ export class PriceDto {
 export class InvoiceLineDto {
   @ApiProperty({
     description: 'HSN code',
-    example: '8523.80.20',
+    example: '8523.80',
   })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^[\d\.]{4,15}$/, { message: 'HSN code must be a numeric/dotted string between 4 and 15 characters' })
+  @Matches(/^\d{4}\.\d{2}$/, { message: 'HSN code must match FIRS format: XXXX.XX (e.g. 8523.80)' })
   hsn_code: string;
 
   @ApiProperty({

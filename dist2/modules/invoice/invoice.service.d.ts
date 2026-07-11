@@ -1,5 +1,5 @@
 import { PrismaService } from "../../database";
-import { ValidateIrnDto, ValidateInvoiceDto, CreateInvoiceDto, UpdateInvoiceDto } from "./dtos";
+import { ValidateIrnDto, ValidateInvoiceDto, CreateInvoiceDto, UpdateInvoiceDto, UpdatePaymentStatusDto } from "./dtos";
 export declare class InvoiceService {
     private readonly prisma;
     private readonly logger;
@@ -52,4 +52,5 @@ export declare class InvoiceService {
     private convertInvoiceToDto;
     createInvoice(data: CreateInvoiceDto, userId: number): Promise<any>;
     updateInvoiceById(invoiceId: number, updateData: UpdateInvoiceDto): Promise<any>;
+    updatePaymentStatus(invoiceId: number, dto: UpdatePaymentStatusDto): Promise<any>;
 }

@@ -30,12 +30,12 @@ function parseCookieSecure() {
     return value.toLowerCase() === "true";
 }
 function getAuthCookieOptions() {
-    const sameSite = (process.env.COOKIE_SAME_SITE || "none").toLowerCase();
+    const sameSite = (process.env.COOKIE_SAME_SITE || "lax").toLowerCase();
     return {
         httpOnly: true,
-        sameSite: ["strict", "lax", "none"].includes(sameSite)
+        sameSite: ["strict", "lax"].includes(sameSite)
             ? sameSite
-            : "none",
+            : "lax",
         secure: parseCookieSecure(),
         maxAge: 1000 * 60 * 60 * 24,
     };

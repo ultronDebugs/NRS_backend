@@ -27,6 +27,9 @@ export declare class FirsService {
     getInvoiceTypes(): Promise<any>;
     getServiceCodes(): Promise<any>;
     getVatExemptions(): Promise<any>;
+    getHsCodes(): Promise<any>;
+    getLgas(): Promise<any>;
+    getStates(): Promise<any>;
     validateIrn(params: ValidateIrnDto): Promise<{
         ok: boolean;
     }>;

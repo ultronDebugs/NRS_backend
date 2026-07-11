@@ -281,7 +281,7 @@ class InvoiceLineDto {
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.Matches)(/^\d{4,10}$/, { message: 'HSN code must be a numeric string between 4 and 10 digits' }),
+    (0, class_validator_1.Matches)(/^\d{4}\.\d{2}$/, { message: 'HSN code must match FIRS format: XXXX.XX (e.g. 8523.80)' }),
     __metadata("design:type", String)
 ], InvoiceLineDto.prototype, "hsn_code", void 0);
 __decorate([

@@ -27,10 +27,10 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.IsIn)(["ADMIN", "CLIENT"]),
+    (0, class_validator_1.IsIn)(["ADMIN", "TENANT"]),
     (0, swagger_1.ApiProperty)({
         description: "The role of the user",
-        example: "CLIENT",
+        example: "TENANT",
         required: true,
     }),
     __metadata("design:type", String)

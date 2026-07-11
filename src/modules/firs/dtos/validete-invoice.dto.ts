@@ -241,7 +241,7 @@ class InvoiceLinePriceDto {
 class InvoiceLineDto {
   @IsString()
   @IsNotEmpty()
-  @Matches(/^\d{4,10}$/, { message: 'HSN code must be a numeric string between 4 and 10 digits' })
+  @Matches(/^\d{4}\.\d{2}$/, { message: 'HSN code must match FIRS format: XXXX.XX (e.g. 8523.80)' })
   readonly hsn_code: string;
 
   @IsString()

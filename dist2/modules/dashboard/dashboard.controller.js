@@ -25,8 +25,8 @@ let DashboardController = class DashboardController {
     }
     async getSummary(user) {
         const userRole = user.role;
-        if (userRole === "CLIENT") {
-            return this.dashboardService.getClientDashboardSummary(user.id);
+        if (userRole === "TENANT") {
+            return this.dashboardService.getTenantDashboardSummary(user.id);
         }
         else if (userRole === "ADMIN") {
             return this.dashboardService.getAdminDashboardSummary();

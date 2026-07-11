@@ -341,6 +341,12 @@ let AuthService = AuthService_1 = class AuthService {
         try {
             this.logger.log(`Fetching entity data from FIRS for entityId: ${entityId}`);
             this.logger.log(`Bypassing FIRS API: Generating mock entity data for entityId: ${entityId} since no SI Key is available yet.`);
+            if (!dto?.businessId) {
+                throw new common_1.BadRequestException("Business ID must be provided as it is assigned by FIRS.");
+            }
+            if (!dto?.irnTemplate) {
+                throw new common_1.BadRequestException("IRN Template must be provided.");
+            }
             const entityData = {
                 id: entityId,
                 reference: "MOCK_REF",
@@ -350,7 +356,7 @@ let AuthService = AuthService_1 = class AuthService {
                 updated_at: new Date().toISOString(),
                 businesses: [
                     {
-                        id: dto?.businessId || process.env.FIRS_BUSINESS_ID || "ac30649a-8243-4fc8-b6a5-654606b8e734",
+                        id: dto.businessId,
                         reference: "MOCK_BIZ_REF",
                         name: dto?.businessName || "MBS FISCAI DIGITAL SERVICES LTD",
                         tin: "33779413-0001",
@@ -360,7 +366,7 @@ let AuthService = AuthService_1 = class AuthService {
                         is_realtime_reporting: false,
                         notification_channels: "EMAIL",
                         erp_system: dto?.erpName || "Others",
-                        irn_template: dto?.irnTemplate || "{{invoice_number}}-9BB244DE-{{YYYYMMDD}}",
+                        irn_template: dto.irnTemplate,
                         is_active: true,
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString(),
@@ -368,6 +374,12 @@ let AuthService = AuthService_1 = class AuthService {
                 ],
             };
             this.logger.log(`Successfully fetched entity data for entityId: ${entityId}`);
+            const entityById = await this.prisma.entity.findUnique({
+                where: { id: entityId },
+            });
+            if (entityById && entityById.userId !== userId) {
+                throw new common_1.ConflictException(`Entity ${entityId} is already registered to another user.`);
+            }
             const existingEntity = await this.prisma.entity.findFirst({
                 where: { userId },
                 include: { businesses: true },
@@ -377,6 +389,7 @@ let AuthService = AuthService_1 = class AuthService {
                 const updatedEntity = await this.prisma.entity.update({
                     where: { id: existingEntity.id },
                     data: {
+                        id: entityData.id,
                         reference: entityData.reference,
                         customSettings: entityData.custom_settings
                             ? JSON.stringify(entityData.custom_settings)
@@ -389,37 +402,57 @@ let AuthService = AuthService_1 = class AuthService {
                         businesses: true,
                     },
                 });
-                await this.prisma.business.deleteMany({
-                    where: { entityId: existingEntity.id },
-                });
-                const existingBusinessesMap = new Map(existingEntity.businesses.map(b => [b.id, b]));
                 if (entityData.businesses && entityData.businesses.length > 0) {
-                    await this.prisma.business.createMany({
-                        data: entityData.businesses.map((business) => ({
-                            id: business.id,
-                            reference: business.reference,
-                            name: business.name,
-                            customSettings: business.custom_settings
-                                ? JSON.stringify(business.custom_settings)
-                                : null,
-                            tin: business.tin,
-                            sector: business.sector,
-                            annualTurnover: business.annual_turnover,
-                            supportPeppol: business.support_peppol,
-                            isRealtimeReporting: business.is_realtime_reporting,
-                            notificationChannels: business.notification_channels,
-                            erpSystem: business.erp_system,
-                            irnTemplate: this.extractIrnTemplate(business.irn_template),
-                            isActive: business.is_active,
-                            createdAt: new Date(business.created_at),
-                            updatedAt: new Date(business.updated_at),
-                            entityId: existingEntity.id,
-                            firsApiKey: dto?.firsApiKey ? (0, crypto_util_1.encryptIfPlaintext)(dto.firsApiKey) : existingBusinessesMap.get(business.id)?.firsApiKey,
-                            firsApiSecret: dto?.firsApiSecret ? (0, crypto_util_1.encryptIfPlaintext)(dto.firsApiSecret) : existingBusinessesMap.get(business.id)?.firsApiSecret,
-                            firsPublicKeyBase64: dto?.firsPublicKeyBase64 ?? existingBusinessesMap.get(business.id)?.firsPublicKeyBase64,
-                            firsCertificateBase64: dto?.firsCertificateBase64 ?? existingBusinessesMap.get(business.id)?.firsCertificateBase64,
-                        })),
-                    });
+                    for (const business of entityData.businesses) {
+                        await this.prisma.business.upsert({
+                            where: { id: business.id },
+                            update: {
+                                reference: business.reference,
+                                name: business.name,
+                                customSettings: business.custom_settings
+                                    ? JSON.stringify(business.custom_settings)
+                                    : null,
+                                tin: business.tin,
+                                sector: business.sector,
+                                annualTurnover: business.annual_turnover,
+                                supportPeppol: business.support_peppol,
+                                isRealtimeReporting: business.is_realtime_reporting,
+                                notificationChannels: business.notification_channels,
+                                erpSystem: business.erp_system,
+                                irnTemplate: this.extractIrnTemplate(business.irn_template),
+                                isActive: business.is_active,
+                                updatedAt: new Date(),
+                                firsApiKey: dto?.firsApiKey ? (0, crypto_util_1.encryptIfPlaintext)(dto.firsApiKey) : undefined,
+                                firsApiSecret: dto?.firsApiSecret ? (0, crypto_util_1.encryptIfPlaintext)(dto.firsApiSecret) : undefined,
+                                firsPublicKeyBase64: dto?.firsPublicKeyBase64 ?? undefined,
+                                firsCertificateBase64: dto?.firsCertificateBase64 ?? undefined,
+                            },
+                            create: {
+                                id: business.id,
+                                reference: business.reference,
+                                name: business.name,
+                                customSettings: business.custom_settings
+                                    ? JSON.stringify(business.custom_settings)
+                                    : null,
+                                tin: business.tin,
+                                sector: business.sector,
+                                annualTurnover: business.annual_turnover,
+                                supportPeppol: business.support_peppol,
+                                isRealtimeReporting: business.is_realtime_reporting,
+                                notificationChannels: business.notification_channels,
+                                erpSystem: business.erp_system,
+                                irnTemplate: this.extractIrnTemplate(business.irn_template),
+                                isActive: business.is_active,
+                                createdAt: new Date(business.created_at),
+                                updatedAt: new Date(business.updated_at),
+                                entityId: updatedEntity.id,
+                                firsApiKey: (0, crypto_util_1.encryptIfPlaintext)(dto?.firsApiKey),
+                                firsApiSecret: (0, crypto_util_1.encryptIfPlaintext)(dto?.firsApiSecret),
+                                firsPublicKeyBase64: dto?.firsPublicKeyBase64,
+                                firsCertificateBase64: dto?.firsCertificateBase64,
+                            },
+                        });
+                    }
                 }
                 return updatedEntity;
             }
@@ -473,6 +506,9 @@ let AuthService = AuthService_1 = class AuthService {
         }
         catch (error) {
             this.logger.error(`Failed to fetch and save entity data for entityId: ${entityId}`, error.stack);
+            if (error.status && error.getResponse) {
+                throw error;
+            }
             if (error.response) {
                 throw new common_1.BadGatewayException(`Failed to fetch entity from FIRS: ${error.response.status} ${JSON.stringify(error.response.data)}`);
             }

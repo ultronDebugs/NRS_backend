@@ -1,8 +1,8 @@
-# Byte Invoice – Project Documentation
+# Genius-Excel – Project Documentation
 
 ## 1. Overview
 
-Byte Invoice is an e-invoicing platform that integrates with FIRS (Federal Inland Revenue Service) for Nigerian tax-compliant invoices. It has role-based access and uses JWT for authentication.
+Genius-Excel is an e-invoicing platform that integrates with FIRS (Federal Inland Revenue Service) for Nigerian tax-compliant invoices. It has role-based access and uses JWT for authentication.
 
 ---
 

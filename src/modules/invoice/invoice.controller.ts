@@ -30,6 +30,7 @@ import {
   ValidateInvoiceDto,
   CreateInvoiceDto,
   UpdateInvoiceDto,
+  UpdatePaymentStatusDto,
 } from "./dtos";
 import { JwtAuthGuard } from "../auth/guard/jwt-auth.guard";
 import { CurrentUser, Public } from "../../common/decorators";
@@ -873,6 +874,102 @@ export class InvoiceController {
     } catch (error) {
       this.logger.error(
         `Failed to confirm invoice with ID: ${invoiceId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Updates the payment status of an invoice by ID.
+   * Syncs the status change to FIRS via PATCH /api/v1/invoice/update/{IRN}
+   * and updates the local database.
+   * @param invoiceId - The invoice ID to update.
+   * @param payload - The payment status and optional reference.
+   * @returns The updated invoice.
+   */
+  @Patch(":id/payment-status")
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @ApiOperation({
+    summary: "Update invoice payment status",
+    description:
+      "Updates the payment status of an invoice. Syncs the change to FIRS and updates the local database. Allowed values: PENDING, PAID, REJECTED.",
+  })
+  @ApiParam({
+    name: "id",
+    description: "The invoice ID",
+    example: 1,
+  })
+  @ApiBody({
+    type: UpdatePaymentStatusDto,
+    description: "The new payment status and optional reference",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Payment status updated successfully",
+    schema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "number",
+          description: "The invoice ID",
+        },
+        paymentStatus: {
+          type: "string",
+          description: "The updated payment status",
+          enum: ["PENDING", "PAID", "REJECTED"],
+        },
+        updatedAt: {
+          type: "string",
+          format: "date-time",
+          description: "The update timestamp",
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid payment status value",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Unauthorized - you do not own this invoice",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Invoice not found",
+  })
+  @ApiResponse({
+    status: 502,
+    description: "FIRS API failed to process the payment status update",
+  })
+  @ApiResponse({
+    status: 500,
+    description: "Internal server error",
+  })
+  async updatePaymentStatus(
+    @CurrentUser() user: any,
+    @Param("id", ParseIntPipe) invoiceId: number,
+    @Body() payload: UpdatePaymentStatusDto,
+  ): Promise<any> {
+    this.logger.log(
+      `Received payment status update request for invoice ID: ${invoiceId} to ${payload.payment_status}`,
+    );
+    await this.ensureInvoiceOwnership(invoiceId, user);
+
+    try {
+      const updatedInvoice = await this.invoiceService.updatePaymentStatus(
+        invoiceId,
+        payload,
+      );
+      this.logger.log(
+        `Successfully updated payment status for invoice ID: ${invoiceId}`,
+      );
+      return updatedInvoice;
+    } catch (error) {
+      this.logger.error(
+        `Failed to update payment status for invoice ID: ${invoiceId}`,
         error.stack,
       );
       throw error;

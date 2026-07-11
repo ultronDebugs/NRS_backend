@@ -75,9 +75,9 @@ let EmailService = EmailService_1 = class EmailService {
             }
             let from = this.configService.get("MAIL_FROM") ||
                 this.configService.get("MAIL_USER") ||
-                "noreply@genius-excel.com";
+                "noreply@northgate.com";
             if (!from.includes("<")) {
-                from = `"Genius-Excel" <${from}>`;
+                from = `"NorthGate" <${from}>`;
             }
             const mailOptions = {
                 from,

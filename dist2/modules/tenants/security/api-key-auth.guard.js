@@ -20,24 +20,24 @@ let ApiKeyAuthGuard = class ApiKeyAuthGuard {
     }
     async canActivate(context) {
         const request = context.switchToHttp().getRequest();
-        const apiKey = request.headers["x-client-key"];
-        const apiSecret = request.headers["x-client-secret"];
+        const apiKey = request.headers["x-tenant-key"];
+        const apiSecret = request.headers["x-tenant-secret"];
         if (!apiKey || !apiSecret) {
-            throw new common_1.UnauthorizedException("Missing client API credentials");
+            throw new common_1.UnauthorizedException("Missing tenant API credentials");
         }
-        const cred = await this.prisma.clientApiCredential.findFirst({
+        const cred = await this.prisma.tenantApiCredential.findFirst({
             where: { apiKey, isActive: true },
             include: { user: true },
         });
         if (!cred) {
-            throw new common_1.UnauthorizedException("Invalid client API credentials");
+            throw new common_1.UnauthorizedException("Invalid tenant API credentials");
         }
         const secretValid = await bcrypt.compare(apiSecret, cred.apiSecret);
         if (!secretValid) {
-            throw new common_1.UnauthorizedException("Invalid client API credentials");
+            throw new common_1.UnauthorizedException("Invalid tenant API credentials");
         }
-        if (cred.user.role !== "CLIENT") {
-            throw new common_1.ForbiddenException("Only clients may access this resource");
+        if (cred.user.role !== "TENANT") {
+            throw new common_1.ForbiddenException("Only tenants may access this resource");
         }
         request.user = { id: cred.userId };
         return true;

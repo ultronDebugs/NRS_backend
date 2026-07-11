@@ -216,6 +216,54 @@ let FirsService = FirsService_1 = class FirsService {
             throw new common_1.BadGatewayException(`Failed to get VAT exemptions: ${error.message}`);
         }
     }
+    async getHsCodes() {
+        if (!this.firsApiUrl) {
+            throw new common_1.InternalServerErrorException("FIRS API credentials are not set in environment variables");
+        }
+        const url = `${this.firsApiUrl}/api/v1/invoice/resources/hs-codes`;
+        try {
+            const response = await axios_1.default.get(url);
+            return response.data;
+        }
+        catch (error) {
+            if (error.response) {
+                throw new common_1.BadGatewayException(`Failed to get hs codes: ${error.response.status} ${JSON.stringify(error.response.data)}`);
+            }
+            throw new common_1.BadGatewayException(`Failed to get hs codes: ${error.message}`);
+        }
+    }
+    async getLgas() {
+        if (!this.firsApiUrl) {
+            throw new common_1.InternalServerErrorException("FIRS API credentials are not set in environment variables");
+        }
+        const url = `${this.firsApiUrl}/api/v1/invoice/resources/lgas`;
+        try {
+            const response = await axios_1.default.get(url);
+            return response.data;
+        }
+        catch (error) {
+            if (error.response) {
+                throw new common_1.BadGatewayException(`Failed to get lgas: ${error.response.status} ${JSON.stringify(error.response.data)}`);
+            }
+            throw new common_1.BadGatewayException(`Failed to get lgas: ${error.message}`);
+        }
+    }
+    async getStates() {
+        if (!this.firsApiUrl) {
+            throw new common_1.InternalServerErrorException("FIRS API credentials are not set in environment variables");
+        }
+        const url = `${this.firsApiUrl}/api/v1/invoice/resources/states`;
+        try {
+            const response = await axios_1.default.get(url);
+            return response.data;
+        }
+        catch (error) {
+            if (error.response) {
+                throw new common_1.BadGatewayException(`Failed to get states: ${error.response.status} ${JSON.stringify(error.response.data)}`);
+            }
+            throw new common_1.BadGatewayException(`Failed to get states: ${error.message}`);
+        }
+    }
     async validateIrn(params) {
         if (!this.firsApiUrl || !this.firsApiKey || !this.firsApiSecret) {
             throw new common_1.InternalServerErrorException("FIRS API credentials are not set in environment variables");

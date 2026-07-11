@@ -86,12 +86,6 @@ describe("UsersService", () => {
     businessAddress: "123 Main St, Lagos",
     rcNumber: "RC123456",
     dateOfIncorporation: "2020-01-01",
-    firsApiKey: "mock-key",
-    firsApiSecret: "mock-secret",
-    firsPublicKeyBase64: "mock-pub",
-    firsCertificateBase64: "mock-cert",
-    businessId: "B123",
-    irnTemplate: "TMP1",
     directors: [
       {
         firstName: "Ada",

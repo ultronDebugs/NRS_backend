@@ -12,7 +12,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiTags, ApiHeader, ApiExcludeEndpoint } from "@nestjs/swagger";
 import { ClientsService } from "./clients.service";
 import { ApiKeyAuthGuard } from "./security/api-key-auth.guard";
 import { JwtAuthGuard } from "../auth/guard/jwt-auth.guard";
@@ -28,6 +28,8 @@ export class ClientsController {
 
   // Client APIs via API Key/Secret headers
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Post("invoice/validate")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -45,6 +47,8 @@ export class ClientsController {
   }
 
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Post("invoice/sign")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -59,6 +63,8 @@ export class ClientsController {
   }
 
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Get("invoice/confirm/:irn")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -71,6 +77,8 @@ export class ClientsController {
   // --- Exchange E-Invoice Transmit APIs (Client) ---
 
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Get("invoice/transmit/self-health-check")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -82,6 +90,8 @@ export class ClientsController {
   }
 
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Get("invoice/transmit/lookup/tin/:tin")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -95,6 +105,8 @@ export class ClientsController {
   }
 
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Get("invoice/transmit/lookup/:irn")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -108,6 +120,8 @@ export class ClientsController {
   }
 
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Get("invoice/transmit/pull")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -118,6 +132,8 @@ export class ClientsController {
   }
 
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Post("invoice/transmit/:irn")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -128,6 +144,8 @@ export class ClientsController {
   }
 
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Patch("invoice/transmit/:irn")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -144,6 +162,8 @@ export class ClientsController {
   }
 
   @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
   @Post("invoice/irn/validate")
   @HttpCode(HttpStatus.OK)
   @UseGuards(ApiKeyAuthGuard)
@@ -154,8 +174,129 @@ export class ClientsController {
     return result.data ?? { ok: true };
   }
 
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/tax-categories")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getTaxCategories(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetTaxCategories(userId);
+    return result.data;
+  }
+
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/payment-means")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getPaymentMeans(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetPaymentMeans(userId);
+    return result.data;
+  }
+
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/countries")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getCountries(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetCountries(userId);
+    return result.data;
+  }
+
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/currencies")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getCurrencies(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetCurrencies(userId);
+    return result.data;
+  }
+
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/invoice-types")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getInvoiceTypes(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetInvoiceTypes(userId);
+    return result.data;
+  }
+
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/service-codes")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getServiceCodes(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetServiceCodes(userId);
+    return result.data;
+  }
+
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/vat-exemptions")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getVatExemptions(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetVatExemptions(userId);
+    return result.data;
+  }
+
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/hs-codes")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getHsCodes(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetHsCodes(userId);
+    return result.data;
+  }
+
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/lgas")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getLgas(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetLgas(userId);
+    return result.data;
+  }
+
+  @Public()
+  @ApiHeader({ name: 'x-api-key', required: true, description: 'Client API Key' })
+  @ApiHeader({ name: 'x-api-secret', required: true, description: 'Client API Secret' })
+  @Get("invoice/resources/states")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(ApiKeyAuthGuard)
+  async getStates(@CurrentUser() req: any) {
+    const userId: number = req.id;
+    const result = await this.clientsService.proxyGetStates(userId);
+    return result.data;
+  }
+
   // Key management (JWT, role must be CLIENT handled at business layer)
   @Post("keys")
+  @ApiExcludeEndpoint()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -167,6 +308,7 @@ export class ClientsController {
   }
 
   @Get("keys")
+  @ApiExcludeEndpoint()
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -177,6 +319,7 @@ export class ClientsController {
   }
 
   @Get("logs")
+  @ApiExcludeEndpoint()
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ transform: true }))

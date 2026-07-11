@@ -16,6 +16,7 @@ import {
   ValidateInvoiceDto,
   CreateInvoiceDto,
   UpdateInvoiceDto,
+  UpdatePaymentStatusDto,
 } from "./dtos";
 import { generateFirsQrCode } from "../../shared/helpers/firs-qr-code.helper";
 import { decryptCredential } from "../../shared/helpers/crypto.util";
@@ -1401,6 +1402,13 @@ export class InvoiceService {
         );
       }
 
+      // Check if invoice payment is already confirmed
+      if (existingInvoice.paymentStatus === "PAID") {
+        throw new BadRequestException(
+          `Invoice with ID ${invoiceId} cannot be updated. Payment has already been confirmed as PAID.`,
+        );
+      }
+
       // Convert update data to FIRS API format
       // const firInvoiceData = {
       //   ...this.convertInvoiceToDto(existingInvoice),
@@ -1518,6 +1526,158 @@ export class InvoiceService {
         error.stack,
       );
       throw error instanceof NotFoundException || error instanceof BadRequestException ? error : new InternalServerErrorException(`Failed to update invoice: ${error.message}`);
+    }
+  }
+
+  /**
+   * Updates the payment status of an invoice.
+   *
+   * Flow:
+   * 1. Fetch the invoice and verify it exists
+   * 2. Call FIRS PATCH /api/v1/invoice/update/{IRN} to sync payment status
+   * 3. Update the local database record
+   * 4. Return the updated invoice
+   *
+   * @param invoiceId - The local invoice ID.
+   * @param dto - The payment status update payload.
+   * @returns The updated invoice.
+   */
+  async updatePaymentStatus(
+    invoiceId: number,
+    dto: UpdatePaymentStatusDto,
+  ): Promise<any> {
+    try {
+      this.logger.log(
+        `Updating payment status for invoice ID: ${invoiceId} to ${dto.payment_status}`,
+      );
+
+      // 1. Fetch the invoice
+      const invoice = await this.getInvoiceById(invoiceId);
+      if (!invoice) {
+        throw new NotFoundException(`Invoice with ID ${invoiceId} not found`);
+      }
+
+      // Block updates if payment is already confirmed as PAID
+      if (invoice.paymentStatus === "PAID") {
+        throw new BadRequestException(
+          `Invoice with ID ${invoiceId} payment status cannot be changed. Payment has already been confirmed as PAID.`,
+        );
+      }
+
+      // 2. Call FIRS API to sync payment status
+      const firsHeaders = await this.getFirsHeadersForBusiness(
+        invoice.businessId,
+      );
+      const firsUrl = `${this.firsApiUrl}/api/v1/invoice/update/${invoice.irn}`;
+      const firsBody: {
+        payment_status: "PENDING" | "PAID" | "REJECTED";
+        reference?: string;
+      } = {
+        payment_status: dto.payment_status,
+      };
+
+      if (dto.reference) {
+        firsBody.reference = dto.reference;
+      }
+
+      try {
+        const firsResponse = await axios.patch(firsUrl, firsBody, {
+          headers: firsHeaders,
+        });
+
+        this.logger.log(
+          `FIRS payment status update response for IRN ${invoice.irn}: ${JSON.stringify(firsResponse.data)}`,
+        );
+
+        if (
+          !firsResponse.data ||
+          firsResponse.data.code !== 200 ||
+          !firsResponse.data.data?.ok
+        ) {
+          this.logger.warn(
+            `FIRS returned non-ok for payment status update on IRN ${invoice.irn}: ${JSON.stringify(firsResponse.data)}`,
+          );
+          throw new BadGatewayException(
+            "FIRS API did not confirm the payment status update",
+          );
+        }
+      } catch (firsError) {
+        if (firsError instanceof BadGatewayException) {
+          throw firsError;
+        }
+        const errorDetail = firsError.response
+          ? `${firsError.response.status} ${JSON.stringify(firsError.response.data)}`
+          : firsError.message;
+        this.logger.error(
+          `Failed to update payment status in FIRS for IRN ${invoice.irn}: ${errorDetail}`,
+        );
+        throw new BadGatewayException(
+          `Failed to sync payment status with FIRS: ${errorDetail}`,
+        );
+      }
+
+      // 3. Update local database
+      const updatedInvoice = await this.prisma.invoice.update({
+        where: { id: invoiceId },
+        data: {
+          paymentStatus: dto.payment_status,
+          updatedAt: new Date(),
+        },
+        include: {
+          invoiceDeliveryPeriod: true,
+          accountingSupplierParty: {
+            include: {
+              postalAddress: true,
+            },
+          },
+          accountingCustomerParty: {
+            include: {
+              postalAddress: true,
+            },
+          },
+          billingReferences: true,
+          documentReferences: true,
+          dispatchDocumentReference: true,
+          receiptDocumentReference: true,
+          originatorDocumentReference: true,
+          contractDocumentReference: true,
+          paymentMeans: true,
+          allowanceCharges: true,
+          taxTotals: {
+            include: {
+              taxSubtotals: {
+                include: {
+                  taxCategory: true,
+                },
+              },
+            },
+          },
+          legalMonetaryTotal: true,
+          invoiceLines: {
+            include: {
+              item: true,
+              price: true,
+            },
+          },
+        },
+      });
+
+      this.logger.log(
+        `Successfully updated payment status for invoice ID: ${invoiceId} to ${dto.payment_status}`,
+      );
+      return updatedInvoice;
+    } catch (error) {
+      this.logger.error(
+        `Failed to update payment status for invoice ID: ${invoiceId}`,
+        error.stack,
+      );
+      throw error instanceof NotFoundException ||
+        error instanceof BadGatewayException ||
+        error instanceof BadRequestException
+        ? error
+        : new InternalServerErrorException(
+            `Failed to update payment status: ${error.message}`,
+          );
     }
   }
 }

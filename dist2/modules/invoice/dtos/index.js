@@ -19,4 +19,5 @@ __exportStar(require("./validate-irn.dto"), exports);
 __exportStar(require("./validate-invoice.dto"), exports);
 __exportStar(require("./create-invoice.dto"), exports);
 __exportStar(require("./update-invoice.dto"), exports);
+__exportStar(require("./update-payment-status.dto"), exports);
 //# sourceMappingURL=index.js.map

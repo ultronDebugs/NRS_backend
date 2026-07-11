@@ -1,5 +1,5 @@
 import { InvoiceService } from "./invoice.service";
-import { GetEntityDto, CreateInvoiceDto, UpdateInvoiceDto } from "./dtos";
+import { GetEntityDto, CreateInvoiceDto, UpdateInvoiceDto, UpdatePaymentStatusDto } from "./dtos";
 export declare class InvoiceController {
     private readonly invoiceService;
     private readonly logger;
@@ -29,5 +29,6 @@ export declare class InvoiceController {
         ok: boolean;
         invoice: any;
     }>;
+    updatePaymentStatus(user: any, invoiceId: number, payload: UpdatePaymentStatusDto): Promise<any>;
     updateInvoiceById(invoiceId: number, payload: UpdateInvoiceDto): Promise<any>;
 }

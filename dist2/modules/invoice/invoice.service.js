@@ -1027,6 +1027,9 @@ let InvoiceService = InvoiceService_1 = class InvoiceService {
             if (existingInvoice.status !== "PENDING") {
                 throw new common_1.BadRequestException(`Invoice with ID ${invoiceId} cannot be updated. Current status: ${existingInvoice.status}`);
             }
+            if (existingInvoice.paymentStatus === "PAID") {
+                throw new common_1.BadRequestException(`Invoice with ID ${invoiceId} cannot be updated. Payment has already been confirmed as PAID.`);
+            }
             const updatedInvoice = await this.prisma.invoice.update({
                 where: { id: invoiceId },
                 data: {
@@ -1102,6 +1105,102 @@ let InvoiceService = InvoiceService_1 = class InvoiceService {
         catch (error) {
             this.logger.error(`Failed to update invoice with ID: ${invoiceId}`, error.stack);
             throw error instanceof common_1.NotFoundException || error instanceof common_1.BadRequestException ? error : new common_1.InternalServerErrorException(`Failed to update invoice: ${error.message}`);
+        }
+    }
+    async updatePaymentStatus(invoiceId, dto) {
+        try {
+            this.logger.log(`Updating payment status for invoice ID: ${invoiceId} to ${dto.payment_status}`);
+            const invoice = await this.getInvoiceById(invoiceId);
+            if (!invoice) {
+                throw new common_1.NotFoundException(`Invoice with ID ${invoiceId} not found`);
+            }
+            if (invoice.paymentStatus === "PAID") {
+                throw new common_1.BadRequestException(`Invoice with ID ${invoiceId} payment status cannot be changed. Payment has already been confirmed as PAID.`);
+            }
+            const firsHeaders = await this.getFirsHeadersForBusiness(invoice.businessId);
+            const firsUrl = `${this.firsApiUrl}/api/v1/invoice/update/${invoice.irn}`;
+            const firsBody = {
+                payment_status: dto.payment_status,
+            };
+            if (dto.reference) {
+                firsBody.reference = dto.reference;
+            }
+            try {
+                const firsResponse = await axios_1.default.patch(firsUrl, firsBody, {
+                    headers: firsHeaders,
+                });
+                this.logger.log(`FIRS payment status update response for IRN ${invoice.irn}: ${JSON.stringify(firsResponse.data)}`);
+                if (!firsResponse.data ||
+                    firsResponse.data.code !== 200 ||
+                    !firsResponse.data.data?.ok) {
+                    this.logger.warn(`FIRS returned non-ok for payment status update on IRN ${invoice.irn}: ${JSON.stringify(firsResponse.data)}`);
+                    throw new common_1.BadGatewayException("FIRS API did not confirm the payment status update");
+                }
+            }
+            catch (firsError) {
+                if (firsError instanceof common_1.BadGatewayException) {
+                    throw firsError;
+                }
+                const errorDetail = firsError.response
+                    ? `${firsError.response.status} ${JSON.stringify(firsError.response.data)}`
+                    : firsError.message;
+                this.logger.error(`Failed to update payment status in FIRS for IRN ${invoice.irn}: ${errorDetail}`);
+                throw new common_1.BadGatewayException(`Failed to sync payment status with FIRS: ${errorDetail}`);
+            }
+            const updatedInvoice = await this.prisma.invoice.update({
+                where: { id: invoiceId },
+                data: {
+                    paymentStatus: dto.payment_status,
+                    updatedAt: new Date(),
+                },
+                include: {
+                    invoiceDeliveryPeriod: true,
+                    accountingSupplierParty: {
+                        include: {
+                            postalAddress: true,
+                        },
+                    },
+                    accountingCustomerParty: {
+                        include: {
+                            postalAddress: true,
+                        },
+                    },
+                    billingReferences: true,
+                    documentReferences: true,
+                    dispatchDocumentReference: true,
+                    receiptDocumentReference: true,
+                    originatorDocumentReference: true,
+                    contractDocumentReference: true,
+                    paymentMeans: true,
+                    allowanceCharges: true,
+                    taxTotals: {
+                        include: {
+                            taxSubtotals: {
+                                include: {
+                                    taxCategory: true,
+                                },
+                            },
+                        },
+                    },
+                    legalMonetaryTotal: true,
+                    invoiceLines: {
+                        include: {
+                            item: true,
+                            price: true,
+                        },
+                    },
+                },
+            });
+            this.logger.log(`Successfully updated payment status for invoice ID: ${invoiceId} to ${dto.payment_status}`);
+            return updatedInvoice;
+        }
+        catch (error) {
+            this.logger.error(`Failed to update payment status for invoice ID: ${invoiceId}`, error.stack);
+            throw error instanceof common_1.NotFoundException ||
+                error instanceof common_1.BadGatewayException ||
+                error instanceof common_1.BadRequestException
+                ? error
+                : new common_1.InternalServerErrorException(`Failed to update payment status: ${error.message}`);
         }
     }
 };

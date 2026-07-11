@@ -509,8 +509,6 @@ export class AuthService {
         `Bypassing FIRS API: Generating mock entity data for entityId: ${entityId} since no SI Key is available yet.`,
       );
 
-      // MOCK DATA: Bypassing FIRS API because we don't have an SI key yet.
-
       if (!dto?.businessId) {
         throw new BadRequestException("Business ID must be provided as it is assigned by FIRS.");
       }
@@ -518,6 +516,7 @@ export class AuthService {
         throw new BadRequestException("IRN Template must be provided.");
       }
 
+      // MOCK DATA: Bypassing FIRS API because we don't have an SI key yet.
       const entityData: any = {
         id: entityId,
         reference: "MOCK_REF",

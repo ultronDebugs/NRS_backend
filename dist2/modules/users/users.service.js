@@ -64,8 +64,8 @@ let UsersService = class UsersService {
             throw new common_1.ConflictException("User with this email already exists");
         }
         const role = registerUserDto.role ?? "USER";
-        if (!["USER", "CLIENT"].includes(role)) {
-            throw new common_1.BadRequestException("Only USER or CLIENT can self-register");
+        if (!["USER", "TENANT"].includes(role)) {
+            throw new common_1.BadRequestException("Only USER or TENANT can self-register");
         }
         const hashedPassword = await bcrypt.hash(registerUserDto.password, 10);
         const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();

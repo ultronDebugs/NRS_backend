@@ -13,6 +13,16 @@ export declare class ClientsController {
     transmitInvoice(irn: string, req: any): Promise<any>;
     transmitConfirmReceipt(irn: string, req: any): Promise<any>;
     validateIrn(payload: ValidateIrnDto, req: any): Promise<any>;
+    getTaxCategories(req: any): Promise<any>;
+    getPaymentMeans(req: any): Promise<any>;
+    getCountries(req: any): Promise<any>;
+    getCurrencies(req: any): Promise<any>;
+    getInvoiceTypes(req: any): Promise<any>;
+    getServiceCodes(req: any): Promise<any>;
+    getVatExemptions(req: any): Promise<any>;
+    getHsCodes(req: any): Promise<any>;
+    getLgas(req: any): Promise<any>;
+    getStates(req: any): Promise<any>;
     createOrRotateKeys(req: any): Promise<{
         apiKey: string;
         apiSecret: string;

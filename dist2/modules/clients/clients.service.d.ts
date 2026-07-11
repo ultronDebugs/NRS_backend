@@ -1,5 +1,6 @@
 import { PrismaService } from "../../database";
 import { InvoiceService } from "../invoice/invoice.service";
+import { FirsService } from "../firs/firs.service";
 export interface ProxyResult {
     ok: boolean;
     data?: any;
@@ -7,8 +8,9 @@ export interface ProxyResult {
 export declare class ClientsService {
     private readonly prisma;
     private readonly invoiceService;
+    private readonly firsService;
     private readonly logger;
-    constructor(prisma: PrismaService, invoiceService: InvoiceService);
+    constructor(prisma: PrismaService, invoiceService: InvoiceService, firsService: FirsService);
     createOrRotateKeys(userId: number): Promise<{
         apiKey: string;
         apiSecret: string;
@@ -37,4 +39,14 @@ export declare class ClientsService {
     private ensureClient;
     private verifyIrnOwnership;
     private generateToken;
+    proxyGetTaxCategories(userId: number): Promise<ProxyResult>;
+    proxyGetPaymentMeans(userId: number): Promise<ProxyResult>;
+    proxyGetCountries(userId: number): Promise<ProxyResult>;
+    proxyGetCurrencies(userId: number): Promise<ProxyResult>;
+    proxyGetInvoiceTypes(userId: number): Promise<ProxyResult>;
+    proxyGetServiceCodes(userId: number): Promise<ProxyResult>;
+    proxyGetVatExemptions(userId: number): Promise<ProxyResult>;
+    proxyGetHsCodes(userId: number): Promise<ProxyResult>;
+    proxyGetLgas(userId: number): Promise<ProxyResult>;
+    proxyGetStates(userId: number): Promise<ProxyResult>;
 }

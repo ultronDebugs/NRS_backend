@@ -96,12 +96,12 @@ __decorate([
 ], RegisterUserDto.prototype, "password", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsIn)(["USER", "CLIENT"]),
+    (0, class_validator_1.IsIn)(["USER", "TENANT"]),
     (0, swagger_1.ApiProperty)({
         description: "The role to assign during public registration",
-        example: "CLIENT",
+        example: "TENANT",
         required: false,
-        enum: ["USER", "CLIENT"],
+        enum: ["USER", "TENANT"],
         default: "USER",
     }),
     __metadata("design:type", String)

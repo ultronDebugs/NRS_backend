@@ -464,11 +464,11 @@ exports.InvoiceLineDto = InvoiceLineDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'HSN code',
-        example: '8523.80.20',
+        example: '8523.80',
     }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.Matches)(/^[\d\.]{4,15}$/, { message: 'HSN code must be a numeric/dotted string between 4 and 15 characters' }),
+    (0, class_validator_1.Matches)(/^\d{4}\.\d{2}$/, { message: 'HSN code must match FIRS format: XXXX.XX (e.g. 8523.80)' }),
     __metadata("design:type", String)
 ], InvoiceLineDto.prototype, "hsn_code", void 0);
 __decorate([

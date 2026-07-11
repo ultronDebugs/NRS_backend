@@ -45,7 +45,7 @@ __decorate([
     (0, class_validator_1.MinLength)(3),
     (0, swagger_1.ApiProperty)({
         description: "The registered business name",
-        example: "Genius-Excel Technology Limited",
+        example: "NorthGate Technology Limited",
         required: true,
     }),
     __metadata("design:type", String)

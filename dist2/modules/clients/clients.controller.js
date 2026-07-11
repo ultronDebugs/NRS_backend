@@ -76,6 +76,56 @@ let ClientsController = class ClientsController {
         const result = await this.clientsService.proxyValidateIrn(userId, payload);
         return result.data ?? { ok: true };
     }
+    async getTaxCategories(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetTaxCategories(userId);
+        return result.data;
+    }
+    async getPaymentMeans(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetPaymentMeans(userId);
+        return result.data;
+    }
+    async getCountries(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetCountries(userId);
+        return result.data;
+    }
+    async getCurrencies(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetCurrencies(userId);
+        return result.data;
+    }
+    async getInvoiceTypes(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetInvoiceTypes(userId);
+        return result.data;
+    }
+    async getServiceCodes(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetServiceCodes(userId);
+        return result.data;
+    }
+    async getVatExemptions(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetVatExemptions(userId);
+        return result.data;
+    }
+    async getHsCodes(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetHsCodes(userId);
+        return result.data;
+    }
+    async getLgas(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetLgas(userId);
+        return result.data;
+    }
+    async getStates(req) {
+        const userId = req.id;
+        const result = await this.clientsService.proxyGetStates(userId);
+        return result.data;
+    }
     async createOrRotateKeys(req) {
         const userId = req.id;
         const keys = await this.clientsService.createOrRotateKeys(userId);
@@ -95,6 +145,8 @@ let ClientsController = class ClientsController {
 exports.ClientsController = ClientsController;
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Post)("invoice/validate"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -107,6 +159,8 @@ __decorate([
 ], ClientsController.prototype, "validateInvoice", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Post)("invoice/sign"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -119,6 +173,8 @@ __decorate([
 ], ClientsController.prototype, "signInvoice", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Get)("invoice/confirm/:irn"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -130,6 +186,8 @@ __decorate([
 ], ClientsController.prototype, "confirmInvoice", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Get)("invoice/transmit/self-health-check"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -140,6 +198,8 @@ __decorate([
 ], ClientsController.prototype, "transmitSelfHealthCheck", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Get)("invoice/transmit/lookup/tin/:tin"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -151,6 +211,8 @@ __decorate([
 ], ClientsController.prototype, "transmitLookupTin", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Get)("invoice/transmit/lookup/:irn"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -162,6 +224,8 @@ __decorate([
 ], ClientsController.prototype, "transmitLookupIrn", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Get)("invoice/transmit/pull"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -172,6 +236,8 @@ __decorate([
 ], ClientsController.prototype, "transmitPullInvoice", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Post)("invoice/transmit/:irn"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -183,6 +249,8 @@ __decorate([
 ], ClientsController.prototype, "transmitInvoice", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Patch)("invoice/transmit/:irn"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -194,6 +262,8 @@ __decorate([
 ], ClientsController.prototype, "transmitConfirmReceipt", null);
 __decorate([
     (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
     (0, common_1.Post)("invoice/irn/validate"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
@@ -205,7 +275,128 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ClientsController.prototype, "validateIrn", null);
 __decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/tax-categories"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getTaxCategories", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/payment-means"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getPaymentMeans", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/countries"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getCountries", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/currencies"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getCurrencies", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/invoice-types"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getInvoiceTypes", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/service-codes"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getServiceCodes", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/vat-exemptions"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getVatExemptions", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/hs-codes"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getHsCodes", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/lgas"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getLgas", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-key', required: true, description: 'Client API Key' }),
+    (0, swagger_1.ApiHeader)({ name: 'x-api-secret', required: true, description: 'Client API Secret' }),
+    (0, common_1.Get)("invoice/resources/states"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UseGuards)(api_key_auth_guard_1.ApiKeyAuthGuard),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ClientsController.prototype, "getStates", null);
+__decorate([
     (0, common_1.Post)("keys"),
+    (0, swagger_1.ApiExcludeEndpoint)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ transform: true })),
@@ -216,6 +407,7 @@ __decorate([
 ], ClientsController.prototype, "createOrRotateKeys", null);
 __decorate([
     (0, common_1.Get)("keys"),
+    (0, swagger_1.ApiExcludeEndpoint)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ transform: true })),
@@ -226,6 +418,7 @@ __decorate([
 ], ClientsController.prototype, "getKeys", null);
 __decorate([
     (0, common_1.Get)("logs"),
+    (0, swagger_1.ApiExcludeEndpoint)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ transform: true })),

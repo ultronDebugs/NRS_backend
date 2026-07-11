@@ -37,6 +37,36 @@ let FirsController = FirsController_1 = class FirsController {
         this.logger.log(`Fetching FIRS entity: ${entityId}`);
         return this.firsService.getEntityById(entityId);
     }
+    async getTaxCategories() {
+        return this.firsService.getTaxCategories();
+    }
+    async getPaymentMeans() {
+        return this.firsService.getPaymentMeans();
+    }
+    async getInvoiceTypes() {
+        return this.firsService.getInvoiceTypes();
+    }
+    async getCurrencies() {
+        return this.firsService.getCurrencies();
+    }
+    async getCountries() {
+        return this.firsService.getCountries();
+    }
+    async getServiceCodes() {
+        return this.firsService.getServiceCodes();
+    }
+    async getVatExemptions() {
+        return this.firsService.getVatExemptions();
+    }
+    async getHsCodes() {
+        return this.firsService.getHsCodes();
+    }
+    async getLgas() {
+        return this.firsService.getLgas();
+    }
+    async getStates() {
+        return this.firsService.getStates();
+    }
     async handleWebhook(payload) {
         this.logger.log(`Received webhook request for IRN: ${payload.irn}`);
         try {
@@ -132,6 +162,96 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], FirsController.prototype, "getEntity", null);
+__decorate([
+    (0, common_1.Get)("resources/tax-categories"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get Tax Categories" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "Tax categories response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getTaxCategories", null);
+__decorate([
+    (0, common_1.Get)("resources/payment-means"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get Payment Means" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "Payment means response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getPaymentMeans", null);
+__decorate([
+    (0, common_1.Get)("resources/invoice-types"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get Invoice Types" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "Invoice types response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getInvoiceTypes", null);
+__decorate([
+    (0, common_1.Get)("resources/currencies"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get Currencies" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "Currencies response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getCurrencies", null);
+__decorate([
+    (0, common_1.Get)("resources/countries"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get Countries" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "Countries response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getCountries", null);
+__decorate([
+    (0, common_1.Get)("resources/service-codes"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get Service Codes" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "Service codes response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getServiceCodes", null);
+__decorate([
+    (0, common_1.Get)("resources/vat-exemptions"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get VAT Exemptions" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "VAT exemptions response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getVatExemptions", null);
+__decorate([
+    (0, common_1.Get)("resources/hs-codes"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get HS Codes (Products)" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "HS codes response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getHsCodes", null);
+__decorate([
+    (0, common_1.Get)("resources/lgas"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get LGAs" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "LGAs response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getLgas", null);
+__decorate([
+    (0, common_1.Get)("resources/states"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: "Get States" }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: "States response" }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], FirsController.prototype, "getStates", null);
 __decorate([
     (0, decorators_1.Public)(),
     (0, common_1.Post)("webhook"),

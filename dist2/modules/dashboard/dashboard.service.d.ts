@@ -7,7 +7,7 @@ export interface DashboardSummary {
     totalBusinesses: number;
     lastInvoiceIssuedAt?: string;
 }
-export interface ClientDashboardSummary {
+export interface TenantDashboardSummary {
     totalApiCalls: number;
     successfulCalls: number;
     failedCalls: number;
@@ -20,7 +20,7 @@ export interface ClientDashboardSummary {
 }
 export interface AdminDashboardSummary {
     totalUsers: number;
-    totalClients: number;
+    totalTenants: number;
     totalInvoices: number;
     totalApiCalls: number;
     recentUsers: any[];
@@ -34,6 +34,6 @@ export declare class DashboardService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     getDashboardSummary(userId: number): Promise<DashboardSummary>;
-    getClientDashboardSummary(userId: number): Promise<ClientDashboardSummary>;
+    getTenantDashboardSummary(userId: number): Promise<TenantDashboardSummary>;
     getAdminDashboardSummary(): Promise<AdminDashboardSummary>;
 }

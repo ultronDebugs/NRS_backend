@@ -44,32 +44,32 @@ let DashboardService = class DashboardService {
                 : undefined,
         };
     }
-    async getClientDashboardSummary(userId) {
+    async getTenantDashboardSummary(userId) {
         const [totalApiCalls, successfulCalls, failedCalls, validateInvoiceCalls, signInvoiceCalls, confirmInvoiceCalls, validateIrnCalls, apiCredential,] = await Promise.all([
-            this.prisma.clientApiLog.count({ where: { userId } }),
-            this.prisma.clientApiLog.count({
+            this.prisma.tenantApiLog.count({ where: { userId } }),
+            this.prisma.tenantApiLog.count({
                 where: { userId, responseStatus: { gte: 200, lt: 300 } },
             }),
-            this.prisma.clientApiLog.count({
+            this.prisma.tenantApiLog.count({
                 where: { userId, responseStatus: { gte: 400 } },
             }),
-            this.prisma.clientApiLog.count({
+            this.prisma.tenantApiLog.count({
                 where: { userId, endpoint: "/api/v1/invoice/validate" },
             }),
-            this.prisma.clientApiLog.count({
+            this.prisma.tenantApiLog.count({
                 where: { userId, endpoint: "/api/v1/invoice/sign" },
             }),
-            this.prisma.clientApiLog.count({
+            this.prisma.tenantApiLog.count({
                 where: { userId, endpoint: { contains: "/api/v1/invoice/confirm/" } },
             }),
-            this.prisma.clientApiLog.count({
+            this.prisma.tenantApiLog.count({
                 where: { userId, endpoint: "/api/v1/invoice/irn/validate" },
             }),
-            this.prisma.clientApiCredential.findUnique({
+            this.prisma.tenantApiCredential.findUnique({
                 where: { userId },
             }),
         ]);
-        const lastApiCall = await this.prisma.clientApiLog.findFirst({
+        const lastApiCall = await this.prisma.tenantApiLog.findFirst({
             where: { userId },
             orderBy: { createdAt: "desc" },
             select: { createdAt: true },
@@ -89,11 +89,11 @@ let DashboardService = class DashboardService {
         };
     }
     async getAdminDashboardSummary() {
-        const [totalUsers, totalClients, totalInvoices, totalApiCalls] = await Promise.all([
+        const [totalUsers, totalTenants, totalInvoices, totalApiCalls] = await Promise.all([
             this.prisma.user.count(),
-            this.prisma.user.count({ where: { role: "CLIENT" } }),
+            this.prisma.user.count({ where: { role: "TENANT" } }),
             this.prisma.invoice.count(),
-            this.prisma.clientApiLog.count(),
+            this.prisma.tenantApiLog.count(),
         ]);
         const recentUsers = await this.prisma.user.findMany({
             take: 5,
@@ -107,7 +107,7 @@ let DashboardService = class DashboardService {
                 isActive: true,
             },
         });
-        const recentApiCalls = await this.prisma.clientApiLog.findMany({
+        const recentApiCalls = await this.prisma.tenantApiLog.findMany({
             take: 10,
             orderBy: { createdAt: "desc" },
             include: {
@@ -128,7 +128,7 @@ let DashboardService = class DashboardService {
         };
         return {
             totalUsers,
-            totalClients,
+            totalTenants,
             totalInvoices,
             totalApiCalls,
             recentUsers,

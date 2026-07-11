@@ -107,6 +107,86 @@ export class FirsController {
     return this.firsService.getEntityById(entityId);
   }
 
+  @Get("resources/tax-categories")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get Tax Categories" })
+  @ApiResponse({ status: 200, description: "Tax categories response" })
+  async getTaxCategories(): Promise<any> {
+    return this.firsService.getTaxCategories();
+  }
+
+  @Get("resources/payment-means")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get Payment Means" })
+  @ApiResponse({ status: 200, description: "Payment means response" })
+  async getPaymentMeans(): Promise<any> {
+    return this.firsService.getPaymentMeans();
+  }
+
+  @Get("resources/invoice-types")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get Invoice Types" })
+  @ApiResponse({ status: 200, description: "Invoice types response" })
+  async getInvoiceTypes(): Promise<any> {
+    return this.firsService.getInvoiceTypes();
+  }
+
+  @Get("resources/currencies")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get Currencies" })
+  @ApiResponse({ status: 200, description: "Currencies response" })
+  async getCurrencies(): Promise<any> {
+    return this.firsService.getCurrencies();
+  }
+
+  @Get("resources/countries")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get Countries" })
+  @ApiResponse({ status: 200, description: "Countries response" })
+  async getCountries(): Promise<any> {
+    return this.firsService.getCountries();
+  }
+
+  @Get("resources/service-codes")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get Service Codes" })
+  @ApiResponse({ status: 200, description: "Service codes response" })
+  async getServiceCodes(): Promise<any> {
+    return this.firsService.getServiceCodes();
+  }
+
+  @Get("resources/vat-exemptions")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get VAT Exemptions" })
+  @ApiResponse({ status: 200, description: "VAT exemptions response" })
+  async getVatExemptions(): Promise<any> {
+    return this.firsService.getVatExemptions();
+  }
+
+  @Get("resources/hs-codes")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get HS Codes (Products)" })
+  @ApiResponse({ status: 200, description: "HS codes response" })
+  async getHsCodes(): Promise<any> {
+    return this.firsService.getHsCodes();
+  }
+
+  @Get("resources/lgas")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get LGAs" })
+  @ApiResponse({ status: 200, description: "LGAs response" })
+  async getLgas(): Promise<any> {
+    return this.firsService.getLgas();
+  }
+
+  @Get("resources/states")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Get States" })
+  @ApiResponse({ status: 200, description: "States response" })
+  async getStates(): Promise<any> {
+    return this.firsService.getStates();
+  }
+
   /**
    * Webhook endpoint to receive notifications from FIRS.
    * This endpoint accepts POST requests and responds with 200 OK to confirm receipt.

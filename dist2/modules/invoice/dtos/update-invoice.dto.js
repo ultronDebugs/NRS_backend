@@ -421,7 +421,7 @@ class UpdateInvoiceLineDto {
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'HSN code',
-        example: '8523.80.20',
+        example: '8523.80',
     }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
@@ -620,10 +620,10 @@ __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: 'Payment status',
         example: 'PENDING',
-        enum: ['PENDING', 'PAID', 'OVERDUE', 'CANCELLED'],
+        enum: ['PENDING', 'PAID', 'REJECTED'],
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsIn)(['PENDING', 'PAID', 'OVERDUE', 'CANCELLED']),
+    (0, class_validator_1.IsIn)(['PENDING', 'PAID', 'REJECTED']),
     __metadata("design:type", String)
 ], UpdateInvoiceDto.prototype, "payment_status", void 0);
 __decorate([

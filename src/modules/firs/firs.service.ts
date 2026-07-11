@@ -276,6 +276,72 @@ export class FirsService {
     }
   }
 
+  async getHsCodes(): Promise<any> {
+    if (!this.firsApiUrl) {
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
+      );
+    }
+
+    const url = `${this.firsApiUrl}/api/v1/invoice/resources/hs-codes`;
+
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new BadGatewayException(
+          `Failed to get hs codes: ${error.response.status} ${JSON.stringify(error.response.data)}`,
+        );
+      }
+      throw new BadGatewayException(`Failed to get hs codes: ${error.message}`);
+    }
+  }
+
+  async getLgas(): Promise<any> {
+    if (!this.firsApiUrl) {
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
+      );
+    }
+
+    const url = `${this.firsApiUrl}/api/v1/invoice/resources/lgas`;
+
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new BadGatewayException(
+          `Failed to get lgas: ${error.response.status} ${JSON.stringify(error.response.data)}`,
+        );
+      }
+      throw new BadGatewayException(`Failed to get lgas: ${error.message}`);
+    }
+  }
+
+  async getStates(): Promise<any> {
+    if (!this.firsApiUrl) {
+      throw new InternalServerErrorException(
+        "FIRS API credentials are not set in environment variables",
+      );
+    }
+
+    const url = `${this.firsApiUrl}/api/v1/invoice/resources/states`;
+
+    try {
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new BadGatewayException(
+          `Failed to get states: ${error.response.status} ${JSON.stringify(error.response.data)}`,
+        );
+      }
+      throw new BadGatewayException(`Failed to get states: ${error.message}`);
+    }
+  }
+
   //#endregion
 
   //#region Invoice

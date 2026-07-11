@@ -119,7 +119,7 @@ class SimpleInvoiceItemDto {
 
   @ApiPropertyOptional({
     description: "HS code for goods. Use this or isic_code for services.",
-    example: "8523.80.20",
+    example: "8523.80",
   })
   @IsOptional()
   @IsString()
@@ -132,7 +132,7 @@ class SimpleInvoiceItemDto {
   })
   @IsOptional()
   @IsString()
-  @MaxLength(100)
+  @MaxLength(150)
   product_category?: string;
 
   @ApiPropertyOptional({
@@ -157,7 +157,7 @@ class SimpleInvoiceItemDto {
   @ApiPropertyOptional({ example: "STANDARD_VAT", default: "STANDARD_VAT" })
   @IsOptional()
   @IsString()
-  @MaxLength(50)
+  @MaxLength(150)
   tax_category?: string = "STANDARD_VAT";
 
   @ApiPropertyOptional({ example: 7.5, default: 7.5 })

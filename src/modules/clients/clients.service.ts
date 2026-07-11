@@ -9,6 +9,7 @@ import { PrismaService } from "../../database";
 import { InvoiceService } from "../invoice/invoice.service";
 import * as crypto from "crypto";
 import * as bcrypt from "bcryptjs";
+import { FirsService } from "../firs/firs.service";
 
 export interface ProxyResult {
   ok: boolean;
@@ -21,6 +22,7 @@ export class ClientsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly invoiceService: InvoiceService,
+    private readonly firsService: FirsService,
   ) {}
 
   async createOrRotateKeys(
@@ -337,5 +339,66 @@ export class ClientsService {
    */
   private generateToken(length: number = 48): string {
     return crypto.randomBytes(length).toString("base64url").slice(0, length);
+  }
+
+  // FIRS Resources Proxy
+  async proxyGetTaxCategories(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getTaxCategories();
+    return { ok: true, data };
+  }
+
+  async proxyGetPaymentMeans(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getPaymentMeans();
+    return { ok: true, data };
+  }
+
+  async proxyGetCountries(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getCountries();
+    return { ok: true, data };
+  }
+
+  async proxyGetCurrencies(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getCurrencies();
+    return { ok: true, data };
+  }
+
+  async proxyGetInvoiceTypes(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getInvoiceTypes();
+    return { ok: true, data };
+  }
+
+  async proxyGetServiceCodes(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getServiceCodes();
+    return { ok: true, data };
+  }
+
+  async proxyGetVatExemptions(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getVatExemptions();
+    return { ok: true, data };
+  }
+
+  async proxyGetHsCodes(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getHsCodes();
+    return { ok: true, data };
+  }
+
+  async proxyGetLgas(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getLgas();
+    return { ok: true, data };
+  }
+
+  async proxyGetStates(userId: number): Promise<ProxyResult> {
+    await this.ensureClient(userId);
+    const data = await this.firsService.getStates();
+    return { ok: true, data };
   }
 }

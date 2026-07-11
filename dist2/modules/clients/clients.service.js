@@ -16,13 +16,16 @@ const database_1 = require("../../database");
 const invoice_service_1 = require("../invoice/invoice.service");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
+const firs_service_1 = require("../firs/firs.service");
 let ClientsService = ClientsService_1 = class ClientsService {
     prisma;
     invoiceService;
+    firsService;
     logger = new common_1.Logger(ClientsService_1.name);
-    constructor(prisma, invoiceService) {
+    constructor(prisma, invoiceService, firsService) {
         this.prisma = prisma;
         this.invoiceService = invoiceService;
+        this.firsService = firsService;
     }
     async createOrRotateKeys(userId) {
         await this.ensureClient(userId);
@@ -279,11 +282,62 @@ let ClientsService = ClientsService_1 = class ClientsService {
     generateToken(length = 48) {
         return crypto.randomBytes(length).toString("base64url").slice(0, length);
     }
+    async proxyGetTaxCategories(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getTaxCategories();
+        return { ok: true, data };
+    }
+    async proxyGetPaymentMeans(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getPaymentMeans();
+        return { ok: true, data };
+    }
+    async proxyGetCountries(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getCountries();
+        return { ok: true, data };
+    }
+    async proxyGetCurrencies(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getCurrencies();
+        return { ok: true, data };
+    }
+    async proxyGetInvoiceTypes(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getInvoiceTypes();
+        return { ok: true, data };
+    }
+    async proxyGetServiceCodes(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getServiceCodes();
+        return { ok: true, data };
+    }
+    async proxyGetVatExemptions(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getVatExemptions();
+        return { ok: true, data };
+    }
+    async proxyGetHsCodes(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getHsCodes();
+        return { ok: true, data };
+    }
+    async proxyGetLgas(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getLgas();
+        return { ok: true, data };
+    }
+    async proxyGetStates(userId) {
+        await this.ensureClient(userId);
+        const data = await this.firsService.getStates();
+        return { ok: true, data };
+    }
 };
 exports.ClientsService = ClientsService;
 exports.ClientsService = ClientsService = ClientsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [database_1.PrismaService,
-        invoice_service_1.InvoiceService])
+        invoice_service_1.InvoiceService,
+        firs_service_1.FirsService])
 ], ClientsService);
 //# sourceMappingURL=clients.service.js.map

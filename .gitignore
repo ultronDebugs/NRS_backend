@@ -1,4 +1,96 @@
-.env
-dist/
+# Node.js dependencies
 node_modules/
-generated/prisma/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.test
+.env.production
+.env.local
+.env.example
+
+# TypeScript build artifacts
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Jest & Vitest coverage and test output
+coverage/
+*.lcov
+jest.config.js
+jest.config.ts
+vitest.config.ts
+.vitest/
+.nyc_output/
+
+# PM2 process manager
+pm2/logs/
+pm2/pids/
+pm2/dump.pm2
+
+# Database & cache files
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-journal
+dump.rdb
+*.pid
+*.lock
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Misc
+.npm/
+
+# Optional: Ignore specific secrets or config files
+secrets.json
+config/local.json
+
+# Ignore build artifacts of Prisma (if used)
+prisma/migrations/
+prisma/dev.db
+prisma/dev.db-journal
+.qodo
+
+
+#Scripts
+src/scripts/
+
+test-auth.js
+NRS_e-invoice-_cryptographic_key.txt
+
+docs/
+.tmp-home/
+DIGITALOCEAN_DROPLET_DEPLOYMENT.md
+VAPT/
+scripts/
+SEEDING.md
+test-masking.js

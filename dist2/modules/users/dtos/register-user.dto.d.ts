@@ -8,5 +8,5 @@ export declare class DirectorDto {
 export declare class RegisterUserDto {
     email: string;
     password: string;
-    role?: "USER" | "CLIENT";
+    role?: "USER" | "TENANT";
 }

@@ -343,7 +343,7 @@ class UpdatePartyDto {
 class UpdateInvoiceLineDto {
   @ApiProperty({
     description: 'HSN code',
-    example: '8523.80.20',
+    example: '8523.80',
   })
   @IsString()
   @IsNotEmpty()
@@ -493,10 +493,10 @@ export class UpdateInvoiceDto {
   @ApiPropertyOptional({
     description: 'Payment status',
     example: 'PENDING',
-    enum: ['PENDING', 'PAID', 'OVERDUE', 'CANCELLED'],
+    enum: ['PENDING', 'PAID', 'REJECTED'],
   })
   @IsOptional()
-  @IsIn(['PENDING', 'PAID', 'OVERDUE', 'CANCELLED'])
+  @IsIn(['PENDING', 'PAID', 'REJECTED'])
   payment_status?: string;
 
   @ApiPropertyOptional({

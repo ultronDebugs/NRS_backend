@@ -72,8 +72,8 @@ async function bootstrap() {
             "Pragma",
             "Expires",
             "x-requested-with",
-            "x-client-key",
-            "x-client-secret",
+            "x-tenant-key",
+            "x-tenant-secret",
             "x-api-key",
             "x-api-secret",
         ],
@@ -86,10 +86,10 @@ async function bootstrap() {
     app.useGlobalInterceptors(new common_1.ClassSerializerInterceptor(app.get(core_1.Reflector)));
     if (process.env.NODE_ENV !== "production") {
         const config = new swagger_1.DocumentBuilder()
-            .setTitle("Genius-Excel E-Invoice API")
-            .setDescription("Genius-Excel System Integrator — FIRS E-Invoicing Platform")
+            .setTitle("NorthGate E-Invoice API")
+            .setDescription("NorthGate System Integrator — FIRS E-Invoicing Platform")
             .setVersion("1.0")
-            .addTag("Genius-Excel")
+            .addTag("NorthGate")
             .addBearerAuth()
             .build();
         const documentFactory = () => swagger_1.SwaggerModule.createDocument(app, config);

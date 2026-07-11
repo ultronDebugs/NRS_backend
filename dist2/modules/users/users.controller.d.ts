@@ -11,20 +11,20 @@ export declare class UsersController {
         password: string;
     }>;
     update(id: number, updateUserDto: UpdateUserDto): Promise<{
-        email: string;
-        role: import(".prisma/client").$Enums.Role;
         entityId: string | null;
         businessName: string | null;
         businessAddress: string | null;
         rcNumber: string | null;
-        isActive: boolean;
-        password: string;
         dateOfIncorporation: Date | null;
-        emailVerificationToken: string | null;
         id: number;
+        email: string;
+        password: string;
+        role: import(".prisma/client").$Enums.Role;
         isEmailVerified: boolean;
+        emailVerificationToken: string | null;
         emailVerificationExpires: Date | null;
         isProfileComplete: boolean;
+        isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
     }>;

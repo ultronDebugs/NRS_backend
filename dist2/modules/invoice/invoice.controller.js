@@ -200,6 +200,19 @@ let InvoiceController = InvoiceController_1 = class InvoiceController {
             throw error;
         }
     }
+    async updatePaymentStatus(user, invoiceId, payload) {
+        this.logger.log(`Received payment status update request for invoice ID: ${invoiceId} to ${payload.payment_status}`);
+        await this.ensureInvoiceOwnership(invoiceId, user);
+        try {
+            const updatedInvoice = await this.invoiceService.updatePaymentStatus(invoiceId, payload);
+            this.logger.log(`Successfully updated payment status for invoice ID: ${invoiceId}`);
+            return updatedInvoice;
+        }
+        catch (error) {
+            this.logger.error(`Failed to update payment status for invoice ID: ${invoiceId}`, error.stack);
+            throw error;
+        }
+    }
     async updateInvoiceById(invoiceId, payload) {
         this.logger.log(`Received request to update invoice with ID: ${invoiceId}`);
         try {
@@ -593,6 +606,73 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number]),
     __metadata("design:returntype", Promise)
 ], InvoiceController.prototype, "confirmInvoiceById", null);
+__decorate([
+    (0, common_1.Patch)(":id/payment-status"),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.UsePipes)(new common_1.ValidationPipe({ transform: true })),
+    (0, swagger_1.ApiOperation)({
+        summary: "Update invoice payment status",
+        description: "Updates the payment status of an invoice. Syncs the change to FIRS and updates the local database. Allowed values: PENDING, PAID, REJECTED.",
+    }),
+    (0, swagger_1.ApiParam)({
+        name: "id",
+        description: "The invoice ID",
+        example: 1,
+    }),
+    (0, swagger_1.ApiBody)({
+        type: dtos_1.UpdatePaymentStatusDto,
+        description: "The new payment status and optional reference",
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: "Payment status updated successfully",
+        schema: {
+            type: "object",
+            properties: {
+                id: {
+                    type: "number",
+                    description: "The invoice ID",
+                },
+                paymentStatus: {
+                    type: "string",
+                    description: "The updated payment status",
+                    enum: ["PENDING", "PAID", "REJECTED"],
+                },
+                updatedAt: {
+                    type: "string",
+                    format: "date-time",
+                    description: "The update timestamp",
+                },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: "Invalid payment status value",
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: "Unauthorized - you do not own this invoice",
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: "Invoice not found",
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 502,
+        description: "FIRS API failed to process the payment status update",
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 500,
+        description: "Internal server error",
+    }),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)("id", common_1.ParseIntPipe)),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, dtos_1.UpdatePaymentStatusDto]),
+    __metadata("design:returntype", Promise)
+], InvoiceController.prototype, "updatePaymentStatus", null);
 __decorate([
     (0, common_1.Post)(":id/update"),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
