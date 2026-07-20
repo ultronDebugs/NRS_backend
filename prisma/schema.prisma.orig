@@ -30,15 +30,6 @@ model User {
   role                Role      @default(USER)
   dateOfIncorporation DateTime? @default(now())
 
-  // Structured business contact & address (auto-fills the invoice supplier party)
-  businessPhone       String?
-  businessDescription String?
-  streetName          String?
-  cityName            String?
-  postalZone          String?
-  state               String?
-  lga                 String?
-
   // Email verification fields
   isEmailVerified          Boolean   @default(false)
   emailVerificationToken   String?
@@ -301,9 +292,8 @@ model LegalMonetaryTotal {
 }
 
 model InvoiceLine {
-  id                  Int      @id @default(autoincrement())
+  id                  Int     @id @default(autoincrement())
   invoiceId           Int
-  productId           String? // nullable ref to the master Product for live reporting; snapshot fields below stay frozen
   hsnCode             String
   productCategory     String
   discountRate        Float
@@ -312,12 +302,10 @@ model InvoiceLine {
   feeAmount           Float
   invoicedQuantity    Float
   lineExtensionAmount Float
-  invoice             Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  product             Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  invoice             Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   item                Item?
   price               Price?
 
-  @@index([productId])
   @@map("invoice_lines")
 }
 
@@ -392,17 +380,12 @@ model Business {
   entity               Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   // Per-business FIRS API credentials (encrypted, from the business's FIRS Dashboard)
-  firsApiKey    String? @map("firs_api_key")
-  firsApiSecret String? @map("firs_api_secret")
+  firsApiKey            String?  @map("firs_api_key")
+  firsApiSecret         String?  @map("firs_api_secret")
 
   // Per-business cryptographic keys (from crypto_keys.txt)
-  firsPublicKeyBase64   String? @map("firs_public_key_base64")
-  firsCertificateBase64 String? @map("firs_certificate_base64")
-
-  // Master records (reusable customers & products for e-invoicing)
-  customers         Customer[]
-  products          Product[]
-  productCategories ProductCategory[]
+  firsPublicKeyBase64   String?  @map("firs_public_key_base64")
+  firsCertificateBase64 String?  @map("firs_certificate_base64")
 
   @@map("businesses")
 }
@@ -537,103 +520,4 @@ model SystemIntegratorFirsSettings {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("system_integrator_firs_settings")
-}
-
-// -----------------------------------------------------------------------------
-// Master records: reusable Customers & Products (e-invoicing platform)
-// Invoices SNAPSHOT these into their embedded tables at creation time, so
-// editing a master record never mutates a historical invoice.
-// -----------------------------------------------------------------------------
-
-model Customer {
-  id                  String  @id @default(uuid())
-  businessId          String  @map("business_id")
-  userId              Int     @map("user_id")
-  partyName           String  @map("party_name")
-  tin                 String
-  email               String
-  telephone           String?
-  businessDescription String? @map("business_description")
-
-  // Embedded postal address (mirrors PostalAddress used on invoices)
-  streetName String @map("street_name")
-  cityName   String @map("city_name")
-  postalZone String @map("postal_zone")
-  country    String @default("NG")
-  lga        String @default("")
-  state      String @default("")
-
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-
-  @@unique([businessId, tin])
-  @@index([userId])
-  @@map("customers")
-}
-
-model ProductCategory {
-  id          String  @id @default(uuid())
-  businessId  String  @map("business_id")
-  userId      Int     @map("user_id")
-  name        String
-  description String?
-  type        String  @default("GOOD") // GOOD | SERVICE
-
-  // Default FIRS classification/tax fields. Products inherit these by COPY at
-  // creation time (copy-on-create); changing them here does not back-fill
-  // existing products. Codes are free-text for now (no reference validation).
-  defaultHsCode          String? @map("default_hs_code")
-  defaultServiceCode     String? @map("default_service_code")
-  defaultProductCategory String? @map("default_product_category")
-  defaultTaxCategory     String  @default("STANDARD_VAT") @map("default_tax_category")
-  defaultTaxRate         Float   @default(7.5) @map("default_tax_rate")
-
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  products Product[]
-
-  @@unique([businessId, name])
-  @@index([userId])
-  @@map("product_categories")
-}
-
-model Product {
-  id          String  @id @default(uuid())
-  businessId  String  @map("business_id")
-  userId      Int     @map("user_id")
-  categoryId  String? @map("category_id")
-  type        String  @default("GOOD") // GOOD | SERVICE
-  name        String
-  description String?
-  sku         String?
-
-  // FIRS classification (free-text; snapshotted onto invoice lines)
-  hsCode          String? @map("hs_code")
-  serviceCode     String? @map("service_code")
-  productCategory String? @map("product_category")
-
-  defaultUnitPrice          Float   @map("default_unit_price")
-  priceUnit                 String  @default("C62") @map("price_unit")
-  taxCategory               String  @default("STANDARD_VAT") @map("tax_category")
-  taxRate                   Float   @default(7.5) @map("tax_rate")
-  sellersItemIdentification String? @map("sellers_item_identification")
-
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  business     Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  category     ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  invoiceLines InvoiceLine[]
-
-  @@unique([businessId, sku])
-  @@index([userId])
-  @@index([categoryId])
-  @@map("products")
 }

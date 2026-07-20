@@ -6,6 +6,8 @@ import {
   IsArray,
   ValidateNested,
   IsDateString,
+  Matches,
+  MaxLength,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { DirectorDto } from "./register-user.dto";
@@ -55,6 +57,59 @@ export class CompleteProfileDto {
     required: false,
   })
   dateOfIncorporation?: string;
+
+  // ── Structured business contact & address (auto-fills the invoice supplier) ──
+
+  @IsOptional()
+  @Matches(/^\+[1-9]\d{1,14}$/, {
+    message: "businessPhone must be E.164 format, e.g. +2348025409900",
+  })
+  @ApiProperty({
+    description: "Business phone in E.164 format. Auto-fills supplier.telephone.",
+    example: "+2348025409900",
+    required: false,
+  })
+  businessPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  @ApiProperty({
+    description: "Short description of the business. Auto-fills supplier.businessDescription.",
+    example: "Sale of cement and building materials",
+    required: false,
+  })
+  businessDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @ApiProperty({ description: "Street name", example: "32, Owonikoko Street", required: false })
+  streetName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  @ApiProperty({ description: "City name", example: "Gwarinpa", required: false })
+  cityName?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{6}$/, { message: "postalZone must be 6 digits" })
+  @ApiProperty({ description: "6-digit postal code", example: "023401", required: false })
+  postalZone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  @ApiProperty({ description: "State", example: "Lagos", required: false })
+  state?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  @ApiProperty({ description: "Local Government Area", example: "Ikeja", required: false })
+  lga?: string;
 
   @IsOptional()
   @IsArray()

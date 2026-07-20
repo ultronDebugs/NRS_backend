@@ -1,0 +1,130 @@
+@@ -31,6 +31,15 @@
+   createdAt           DateTime              @default(now()) @map("created_at")
+   updatedAt           DateTime              @updatedAt @map("updated_at")
+ 
++  // Structured business contact & address (auto-fills the invoice supplier party)
++  businessPhone       String?
++  businessDescription String?
++  streetName          String?
++  cityName            String?
++  postalZone          String?
++  state               String?
++  lga                 String?
++
+   entity              Entity                @relation(fields: [entityId], references: [id])
+   invoices            Invoice[]
+   clientApiLog        ClientApiLog[]
+@@ -296,6 +305,7 @@
+   quantity            Float
+   name                String?
+   description         String?
++  productId           String? // nullable ref to the master Product for live reporting; snapshot fields below stay frozen
+   hsnCode             String  @map("hsn_code")
+   productCategory     String  @map("product_category")
+   priceAmount         Float   @map("price_amount")
+@@ -304,7 +314,9 @@
+   taxRate             Float   @map("tax_rate")
+ 
+   invoice             Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
++  product             Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+ 
++  @@index([productId])
+   @@map("invoice_lines")
+ }
+ 
+@@ -389,6 +401,11 @@
+   updatedAt DateTime @updatedAt @map("updated_at")
+ 
+   entity   Entity    @relation(fields: [entityId], references: [id])
++
++  // Master records (reusable customers & products for e-invoicing)
++  customers         Customer[]
++  products          Product[]
++  productCategories ProductCategory[]
+   invoices Invoice[]
+ 
+   @@map("businesses")
+@@ -522,3 +539,83 @@
+   @@unique([tin])
+   @@map("entities")
+ }
++
++// -----------------------------------------------------------------------------
++// Master records: reusable Customers & Products (e-invoicing platform)
++// Invoices SNAPSHOT these into their embedded tables at creation time, so
++// editing a master record never mutates a historical invoice.
++// -----------------------------------------------------------------------------
++
++model Customer {
++  id                  String  @id @default(uuid())
++  businessId          String  @map("business_id")
++  userId              Int     @map("user_id")
++  partyName           String  @map("party_name")
++  tin                 String
++  email               String
++  telephone           String?
++  businessDescription String? @map("business_description")
++
++  // Embedded postal address (mirrors PostalAddress used on invoices)
++  streetName String @map("street_name")
++  cityName   String @map("city_name")
++  postalZone String @map("postal_zone")
++  country    String @default("NG")
++  lga        String @default("")
++  state      String @default("")
++
++  isActive  Boolean  @default(true) @map("is_active")
++  createdAt DateTime @default(now()) @map("created_at")
++  updatedAt DateTime @updatedAt @map("updated_at")
++
++  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
++
++  @@unique([businessId, tin])
++  @@index([userId])
++  @@map("customers")
++}
++
++model ProductCategory {
++  id          String  @id @default(uuid())
++  businessId  String  @map("business_id")
++  userId      Int     @map("user_id")
++  name        String
++  description String?
++  type        String  @default("GOOD") // GOOD | SERVICE
++
++  // Default FIRS classification/tax fields. Products inherit these by COPY at
++  // creation time (copy-on-create); changing them here does not back-fill
++  // existing products. Codes are free-text for now (no reference validation).
++  defaultHsCode          String? @map("default_hs_code")
++  defaultServiceCode     String? @map("default_service_code")
++  defaultProductCategory String? @map("default_product_category")
++  defaultTaxCategory     String  @default("STANDARD_VAT") @map("default_tax_category")
++  defaultTaxRate         Float   @default(7.5) @map("default_tax_rate")
++
++  isActive  Boolean  @default(true) @map("is_active")
++  createdAt DateTime @default(now()) @map("created_at")
++  updatedAt DateTime @updatedAt @map("updated_at")
++
++  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
++  products Product[]
++
++  @@unique([businessId, name])
++  @@index([userId])
++  @@map("product_categories")
++}
++
++model Product {
++  id          String  @id @default(uuid())
++  businessId  String  @map("business_id")
++  userId      Int     @map("user_id")
++  categoryId  String? @map("category_id")
++  type        String  @default("GOOD") // GOOD | SERVICE
++  name        String
++  description String?
++  sku         String?
++
++  // FIRS classification (free-text; snapshotted onto invoice lines)
++  hsCode          String? @map("hs_code")
++  serviceCode     String? @map("service_code")
++  productCategory String? @map("product_category")
++

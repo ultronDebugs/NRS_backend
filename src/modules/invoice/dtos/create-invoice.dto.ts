@@ -93,11 +93,25 @@ class SimplePartyDto {
 }
 
 class SimpleInvoiceItemDto {
-  @ApiProperty({ example: "Cement" })
+  @ApiPropertyOptional({
+    description:
+      "Saved product to base this line on. Any field omitted below is copied from the product; provided fields override it.",
+    example: "3f1c0d8e-2b9a-4c7e-9f10-1a2b3c4d5e6f",
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  product_id?: string;
+
+  @ApiPropertyOptional({
+    description: "Required unless product_id is supplied.",
+    example: "Cement",
+  })
+  @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(255)
-  name: string;
+  name?: string;
 
   @ApiPropertyOptional({ example: "50kg bag of cement" })
   @IsOptional()
@@ -111,11 +125,15 @@ class SimpleInvoiceItemDto {
   @Type(() => Number)
   quantity: number;
 
-  @ApiProperty({ example: 10000 })
+  @ApiPropertyOptional({
+    description: "Required unless product_id is supplied. Overrides the product's default price.",
+    example: 10000,
+  })
+  @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
-  unit_price: number;
+  unit_price?: number;
 
   @ApiPropertyOptional({
     description: "HS code for goods. Use this or isic_code for services.",
@@ -279,10 +297,24 @@ export class CreateInvoiceDto {
   @Type(() => SimplePartyDto)
   supplier?: SimplePartyDto;
 
-  @ApiProperty({ type: SimplePartyDto })
+  @ApiPropertyOptional({
+    description:
+      "Saved customer to bill. Provide this OR the inline `customer` object.",
+    example: "9a8b7c6d-5e4f-4321-9876-0f1e2d3c4b5a",
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  customer_id?: string;
+
+  @ApiPropertyOptional({
+    description: "Inline customer. Required unless `customer_id` is supplied.",
+    type: SimplePartyDto,
+  })
+  @IsOptional()
   @ValidateNested()
   @Type(() => SimplePartyDto)
-  customer: SimplePartyDto;
+  customer?: SimplePartyDto;
 
   @ApiProperty({ type: [SimpleInvoiceItemDto] })
   @IsArray()

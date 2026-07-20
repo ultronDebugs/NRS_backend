@@ -81,20 +81,33 @@ describe("UsersService", () => {
   });
 
   const completeProfileDto: CompleteProfileDto = {
-    entityId: "entity-123",
-    businessName: "Genius-Excel Technology Limited",
-    businessAddress: "123 Main St, Lagos",
+    entityId: "uuid-1234",
+    businessName: "Genius-Excel Test Business",
+    businessAddress: "123 Test St",
     rcNumber: "RC123456",
+    businessPhone: "+2348000000000",
+    businessDescription: "Test Business",
+    streetName: "Test St",
+    cityName: "Test City",
+    postalZone: "100001",
+    state: "Test State",
+    lga: "Test LGA",
     dateOfIncorporation: "2020-01-01",
     directors: [
       {
-        firstName: "Ada",
-        lastName: "Lovelace",
-        email: "ada@example.com",
-        phoneNumber: "08012345678",
+        firstName: "Jane",
+        lastName: "Doe",
+        email: "jane@test.com",
+        phoneNumber: "08000000000",
         nin: "12345678901",
       },
     ],
+    firsApiKey: "test-api-key",
+    firsApiSecret: "test-api-secret",
+    firsPublicKeyBase64: "test-pub-key",
+    firsCertificateBase64: "test-cert",
+    businessId: "business-123",
+    irnTemplate: "{{invoice_id}}-XXXX-{{YYYYMMDD}}",
   };
 
   it("completes a profile and replaces submitted directors", async () => {
@@ -118,10 +131,10 @@ describe("UsersService", () => {
             deleteMany: {},
             create: [
               {
-                firstName: "Ada",
-                lastName: "Lovelace",
-                email: "ada@example.com",
-                phoneNumber: "08012345678",
+                firstName: "Jane",
+                lastName: "Doe",
+                email: "jane@test.com",
+                phoneNumber: "08000000000",
                 nin: "12345678901",
               },
             ],

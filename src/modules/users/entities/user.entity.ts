@@ -12,6 +12,13 @@ export class User {
   businessName?: string;
   businessAddress?: string;
   rcNumber?: string;
+  businessPhone?: string;
+  businessDescription?: string;
+  streetName?: string;
+  cityName?: string;
+  postalZone?: string;
+  state?: string;
+  lga?: string;
   role: any; // Using any to avoid type conflicts with Prisma's Role enum
   isEmailVerified: boolean;
   

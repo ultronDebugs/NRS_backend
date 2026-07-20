@@ -14,6 +14,8 @@ import { ConfigurationModule } from "./modules/configuration/configuration.modul
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { ClientsModule } from "./modules/clients/clients.module";
 import { SystemIntegratorModule } from "./modules/system-integrator/system-integrator.module";
+import { CustomersModule } from "./modules/customers/customers.module";
+import { ProductsModule } from "./modules/products/products.module";
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { SystemIntegratorModule } from "./modules/system-integrator/system-integ
     DashboardModule,
     ClientsModule,
     SystemIntegratorModule,
+    CustomersModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [

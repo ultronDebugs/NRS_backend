@@ -1150,6 +1150,95 @@ export class InvoiceService {
         }
       }
 
+      // Resolve the customer party — from a saved Customer or inline.
+      let customerParty: {
+        partyName: string;
+        tin: string;
+        email: string;
+        telephone?: string | null;
+        businessDescription?: string | null;
+        address: {
+          streetName: string;
+          cityName: string;
+          postalZone: string;
+          country: string;
+          lga: string;
+          state: string;
+        };
+      };
+
+      if (data.customer_id) {
+        const saved = await this.prisma.customer.findUnique({
+          where: { id: data.customer_id },
+        });
+        if (!saved || !saved.isActive) {
+          throw new NotFoundException("Customer not found");
+        }
+        if (saved.businessId !== businessId) {
+          throw new BadRequestException(
+            "Customer belongs to a different business than this invoice",
+          );
+        }
+        customerParty = {
+          partyName: saved.partyName,
+          tin: saved.tin,
+          email: saved.email,
+          telephone: saved.telephone,
+          businessDescription: saved.businessDescription,
+          address: {
+            streetName: saved.streetName,
+            cityName: saved.cityName,
+            postalZone: saved.postalZone,
+            country: saved.country,
+            lga: saved.lga,
+            state: saved.state,
+          },
+        };
+      } else if (data.customer) {
+        customerParty = {
+          partyName: data.customer.party_name,
+          tin: data.customer.tin,
+          email: data.customer.email,
+          telephone: data.customer.telephone,
+          businessDescription: data.customer.business_description,
+          address: {
+            streetName: data.customer.postal_address.street_name,
+            cityName: data.customer.postal_address.city_name,
+            postalZone: data.customer.postal_address.postal_zone,
+            country: data.customer.postal_address.country ?? "NG",
+            lga: data.customer.postal_address.lga,
+            state: data.customer.postal_address.state,
+          },
+        };
+      } else {
+        throw new BadRequestException(
+          "Provide either customer_id or an inline customer",
+        );
+      }
+
+      // Pre-load any saved products referenced by line items (one query).
+      const requestedProductIds = data.items
+        .filter((i) => i.product_id)
+        .map((i) => i.product_id as string);
+      const productMap = new Map<string, any>();
+      if (requestedProductIds.length > 0) {
+        const products = await this.prisma.product.findMany({
+          where: { id: { in: requestedProductIds } },
+        });
+        for (const p of products) productMap.set(p.id, p);
+        for (const id of requestedProductIds) {
+          const p = productMap.get(id);
+          if (!p || !p.isActive) {
+            throw new NotFoundException(`Product ${id} not found`);
+          }
+          if (p.businessId !== businessId) {
+            throw new BadRequestException(
+              `Product ${id} belongs to a different business than this invoice`,
+            );
+          }
+        }
+      }
+
       // Calculate totals
       let lineExtTotal = 0;
       let taxExclTotal = 0;
@@ -1167,8 +1256,33 @@ export class InvoiceService {
       >();
 
       const invoiceLines = data.items.map((line) => {
-        const lineExtensionAmount = line.quantity * line.unit_price;
-        const taxRate = line.tax_rate ?? 7.5;
+        // Snapshot: inline value wins, else the saved product's value.
+        const product = line.product_id ? productMap.get(line.product_id) : null;
+        const name = line.name ?? product?.name;
+        const unitPrice = line.unit_price ?? product?.defaultUnitPrice;
+        if (name == null || unitPrice == null) {
+          throw new BadRequestException(
+            "Each item needs a product_id, or an inline name and unit_price",
+          );
+        }
+        const description = line.description ?? product?.description ?? "";
+        const hsnCode =
+          line.hsn_code ??
+          line.isic_code ??
+          product?.hsCode ??
+          product?.serviceCode ??
+          "N/A";
+        const productCategory =
+          line.product_category ??
+          line.service_category ??
+          product?.productCategory ??
+          "N/A";
+        const taxRate = line.tax_rate ?? product?.taxRate ?? 7.5;
+        const taxCategory =
+          line.tax_category ?? product?.taxCategory ?? "STANDARD_VAT";
+        const priceUnit = line.price_unit ?? product?.priceUnit ?? "C62";
+
+        const lineExtensionAmount = line.quantity * unitPrice;
         const taxAmount = (lineExtensionAmount * taxRate) / 100;
 
         lineExtTotal += lineExtensionAmount;
@@ -1184,15 +1298,15 @@ export class InvoiceService {
           taxSubtotalsMap.set(taxRate, {
             taxableAmount: lineExtensionAmount,
             taxAmount: taxAmount,
-            categoryId: line.tax_category || "STANDARD_VAT",
+            categoryId: taxCategory,
             percent: taxRate,
           });
         }
 
         return {
-          hsnCode: line.hsn_code || line.isic_code || "N/A",
-          productCategory:
-            line.product_category || line.service_category || "N/A",
+          productId: product?.id ?? null,
+          hsnCode,
+          productCategory,
           discountRate: 0,
           discountAmount: line.discount_amount || 0,
           feeRate: 0,
@@ -1201,15 +1315,17 @@ export class InvoiceService {
           lineExtensionAmount: lineExtensionAmount,
           item: {
             create: {
-              name: line.name,
-              description: line.description || "",
+              name,
+              description,
+              sellersItemIdentification:
+                product?.sellersItemIdentification ?? undefined,
             },
           },
           price: {
             create: {
-              priceAmount: line.unit_price,
+              priceAmount: unitPrice,
               baseQuantity: 1,
-              priceUnit: line.price_unit || "C62",
+              priceUnit,
             },
           },
         };
@@ -1254,22 +1370,22 @@ export class InvoiceService {
               }
             : undefined,
 
-          // Create customer party
+          // Create customer party (snapshot of the saved/inline customer)
           accountingCustomerParty: {
             create: {
-              partyName: data.customer.party_name,
-              tin: data.customer.tin,
-              email: data.customer.email,
-              telephone: data.customer.telephone,
-              businessDescription: data.customer.business_description,
+              partyName: customerParty.partyName,
+              tin: customerParty.tin,
+              email: customerParty.email,
+              telephone: customerParty.telephone,
+              businessDescription: customerParty.businessDescription,
               postalAddress: {
                 create: {
-                  streetName: data.customer.postal_address.street_name,
-                  cityName: data.customer.postal_address.city_name,
-                  postalZone: data.customer.postal_address.postal_zone,
-                  country: data.customer.postal_address.country ?? "NG",
-                  lga: data.customer.postal_address.lga,
-                  state: data.customer.postal_address.state,
+                  streetName: customerParty.address.streetName,
+                  cityName: customerParty.address.cityName,
+                  postalZone: customerParty.address.postalZone,
+                  country: customerParty.address.country ?? "NG",
+                  lga: customerParty.address.lga,
+                  state: customerParty.address.state,
                 },
               },
             },
