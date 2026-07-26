@@ -42,6 +42,7 @@ async function bootstrap() {
     "http://localhost:5173",
     "http://162.243.229.65:3001",
     "http://162.243.229.65",
+    "https://geniusexcel.netlify.app"
   ];
 
   const allowedOrigins = Array.from(
